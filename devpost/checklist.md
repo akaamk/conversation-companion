@@ -59,7 +59,7 @@ Build mode: learn
   Learner check: Have a real conversation. Tell a longer story with pauses, watch the orb, then say goodbye. In a second conversation, go quiet and wait for the check-in.
   Commit: `Add orb states, natural pacing and conversation endings`
 
-- [ ] **6. It handles the what-ifs gracefully**
+- [x] **6. It handles the what-ifs gracefully**
   Becomes usable: If it doesn't catch what was said, it asks gently to repeat. A blocked microphone or unsupported browser shows a clear note for the family member. If Claude or the helper fails, the orb stops, a message appears, and it says it needs to stop. Distress handling and refusals give a calm fallback. The README explains how to try it.
   Why now: The demo path works and feels right, so now we protect it from the realistic failures that could happen while recording or when a family tries it.
   PRD ref: `prd.md > States and Boundaries`
@@ -113,4 +113,5 @@ Activity mode:
 - Ending a conversation also turns off the sound meter's microphone (added in slice 2), and the silence check-in is sent as a note in place of the elder's words rather than a hidden system message; `&idle=` testing switch added. Found and fixed while testing: pressing Start after a goodbye would never start listening.
 - Silence is now measured from the elder's last real words with a half-second check, and empty speech results are ignored — in the learner's live test the check-in never came after 2 minutes; reproduced: Edge's empty results in a quiet room kept resetting the timer. Orb states now have distinct colors (listening sage green, thinking pale gold, speaking terracotta) at the learner's request.
 - Slice 5 learner check passed: goodbye ends the conversation and brings back Start (the learner kept how it ended when they said their grandson was calling), the silence check-in works, the orb colors are clear, and the woman's voice is used when chosen.
+- Slice 6 learner check passed: the blocked-microphone note showed, and mumbling "more or less worked" (followed up in the final review). Final automated run before the final review: 131 checks across 17 test scripts, all passing.
 
