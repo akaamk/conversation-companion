@@ -46,6 +46,12 @@ function setUpRecognition() {
   recognition.interimResults = true;
 
   recognition.onresult = (event) => {
+    // The browser can deliver one last copy of what it heard after we stop
+    // listening. Ignore it, or it would be treated as the elder speaking again.
+    if (!listening) {
+      return;
+    }
+
     // Collect every finished phrase heard so far in this turn.
     let finalText = "";
     for (let i = 0; i < event.results.length; i++) {
@@ -109,6 +115,7 @@ async function finishTurn() {
 
 function speak(text, whenDone) {
   setStatus("Speaking…");
+  speechSynthesis.cancel(); // never let replies pile up
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = "en-US";
   utterance.onend = whenDone;
