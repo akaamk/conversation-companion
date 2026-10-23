@@ -76,7 +76,7 @@ Build mode: learn
 
 ## Final Review
 
-- [ ] Mumbling sometimes got a reply instead of "say it again": treat short, low-confidence speech as not caught (learner's final-review finding). Done: a turn of up to 4 words the browser is less than 0.5 sure of gets "say it again" (at most once in 30s); `?debug` shows how sure it was. Verified with 6 new checks; learner to retry
+- [ ] Mumbling sometimes got a reply instead of "say it again": treat short, low-confidence speech as not caught (learner's final-review finding). Done: a turn of up to 4 words the browser is less than 0.5 sure of gets "say it again" (at most once in 30s); `?debug` shows how sure it was. Verified with 6 new checks. Learner retry: Edge reports confidence 1.0 even for gibberish, so the check only helps in browsers that report real confidence; Claude's instructions now say to ask again when what it received doesn't make sense, and to carry on when only a word or two is unclear
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
