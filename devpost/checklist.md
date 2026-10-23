@@ -19,7 +19,7 @@ Build mode: learn
   Learner check: Open your Vercel link in Chrome or Edge, press Start, allow the microphone, say "Hi, how are you today?", and hear a spoken answer. Then say one more thing and hear it answer again.
   Commit: `Add spoken round trip with Claude on Vercel`
 
-- [ ] **2. The voice sounds natural, answers sooner, and can be interrupted**
+- [x] **2. The voice sounds natural, answers sooner, and can be interrupted**
   Becomes usable: The companion speaks with the most natural voice the browser offers (Edge's "Natural" voices), starts speaking its first sentence while the rest is still being written, waits 1.5 seconds of quiet before answering, and stops talking and listens when you tap the screen. A hidden testing line (add `?debug` to the address) shows what the browser heard and how long each part took.
   Why now: The learner's first live test found the voice robotic, the delay noticeable, and no way to interrupt. All three affect whether the companion's personality can be judged in the next slice, so the voice gets fixed first. Pulled forward from slice 5 (natural voice, tap-to-interrupt) and from the spec's planned streaming upgrade.
   PRD ref: `prd.md > Voice Conversation`
@@ -100,3 +100,4 @@ Activity mode:
 - Voice failures handled: an online voice that errors or never starts switches to a voice on the computer, and the page no longer hangs on "Speaking…"; text selection no longer counts as a tap; a "Tap anywhere to interrupt" hint shows while speaking; pause shortened to 1.5s — from the learner's live test: silent "Speaking…" hang, copying the testing line interrupted it, no sign that tapping interrupts, and the learner wanted a shorter pause.
 - Words are kept across Edge's automatic listening restarts and the restart gap no longer counts as the pause; a failed online voice is retried once before falling back, and the fallback applies to one reply only — the learner was cut off during a pause shorter than 1.5s, and after a tap the robotic voice took over for the rest of the conversation.
 - Wait an extra 2s when the words so far sound unfinished ("yeah", "so", "I mean", "let me"…) — the learner was cut off while saying "yeah, um, let me restart"; the browser doesn't transcribe "um", so hesitations looked like silence.
+- Companion instructions now avoid first-meeting greetings ("nice to meet you") and claims of remembering past chats — from the learner's live test; the companion has no memory between conversations.
