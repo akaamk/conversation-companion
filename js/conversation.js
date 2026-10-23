@@ -82,26 +82,14 @@ function showDebug(text) {
 
 // ---- Choosing a voice ----
 
-// Mature-sounding male voices, best first (Edge's "Natural" voices).
-const PREFERRED_VOICES = ["Guy", "Christopher", "Roger", "Eric", "Davis", "Andrew", "Brian", "Steffan"];
-
-// A voice can be tried out by adding ?voice=Name to the address.
-const requestedVoice = new URLSearchParams(location.search).get("voice");
+// The family's choice from the questionnaire ("man" or "woman"; Guy is the
+// default man's voice). See js/voices.js. A voice can be tried out by adding
+// ?voice=Name to the address.
+const voiceKind = (answers && answers.voice) || "man";
+const requestedVoice = params.get("voice");
 
 function pickVoice() {
-  const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
-  const named = (part) => voices.find((v) => v.name.toLowerCase().includes(part.toLowerCase()));
-  const naturalNamed = (part) =>
-    voices.find((v) => /natural/i.test(v.name) && v.name.toLowerCase().includes(part.toLowerCase()));
-
-  voice =
-    (requestedVoice && named(requestedVoice)) ||
-    PREFERRED_VOICES.map(naturalNamed).find(Boolean) ||
-    voices.find((v) => v.lang === "en-US" && /natural/i.test(v.name)) ||
-    voices.find((v) => v.lang === "en-US" && /google/i.test(v.name)) ||
-    voices.find((v) => v.lang === "en-US") ||
-    voices[0] ||
-    null;
+  voice = pickVoiceFor(voiceKind, requestedVoice);
 }
 
 if ("speechSynthesis" in window) {
@@ -332,8 +320,7 @@ const activeUtterances = new Set();
 
 // A voice that runs on the computer itself, for when an online voice fails.
 function localVoice() {
-  const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
-  return voices.find((v) => v.localService && v.lang === "en-US") || voices.find((v) => v.localService) || null;
+  return localVoiceFor(voiceKind);
 }
 
 // Symbols the voice would read aloud ("M asterisk A asterisk…"): remove them.

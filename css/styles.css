@@ -150,6 +150,50 @@ form .button {
   margin: 48px auto 0;
 }
 
+.voice-choice {
+  border: none;
+  padding: 0;
+  margin: 36px 0 0;
+}
+
+.voice-choice legend {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.voice-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+
+.voice-option input {
+  width: 26px;
+  height: 26px;
+  accent-color: var(--terracotta);
+}
+
+.voice-option label {
+  margin: 0;
+  font-weight: 400;
+  font-size: 1.2rem;
+  flex: 1;
+}
+
+.hear {
+  padding: 8px 20px;
+  border: 2px solid var(--terracotta);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--terracotta);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .error {
   color: #a23b1d;
   font-weight: 600;

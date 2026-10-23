@@ -49,6 +49,7 @@ Source: `scope.md > The POC Boundary` (short questionnaire). Eight questions, dr
 6. Which of those experiences should the companion know about but wait for them to bring up first?
 7. Do they have difficulty hearing or following conversation, and what helps?
 8. Are there subjects that upset them, and how should the companion respond if those come up?
+9. Which voice would suit them? (A man's voice or a woman's voice, each with a "Hear it" sample. Added after the learner tested a profile for a woman and heard the man's voice; brings back question 24 from the original 50.)
 
 - As a family member, I want to describe my loved one in my own words so the companion feels personal to them.
   - [ ] All eight questions appear on one page, each with a free-text box.

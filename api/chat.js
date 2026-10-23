@@ -8,6 +8,7 @@ import { buildInstructions } from "./companion-instructions.js";
 
 export const MODEL = "claude-haiku-5-5";
 
+// The voice choice stays in the browser; only these answers shape the companion.
 const ANSWER_FIELDS = ["name", "ageAndOrigin", "personality", "interests", "experiences", "holdBack", "communication", "upsetting"];
 
 // Keeps only the questionnaire fields we expect, as plain text of a sensible length.

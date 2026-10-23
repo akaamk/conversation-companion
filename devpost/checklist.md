@@ -39,7 +39,7 @@ Build mode: learn
   Learner check: Talk with the demo companion for a few minutes. Does it sound like the companion you wrote? Try steering near a held-back story without mentioning it, then bring the story up yourself.
   Commit: `Add tailored companion instructions with hold-back rule`
 
-- [ ] **4. A family member can set it up from the Home page and questionnaire**
+- [x] **4. A family member can set it up from the Home page and questionnaire**
   Becomes usable: The full journey. Home page with your welcome text, Get started, the 8-question page, submit, then the Conversation page using those answers instead of the built-in demo ones.
   Why now: With the kernel proven, this adds the family half of the core journey, which is the setup the demo video shows first.
   PRD ref: `prd.md > Home Page`, `prd.md > Family Questionnaire`, `prd.md > Screens and Layout`
@@ -108,3 +108,5 @@ Activity mode:
 - Normal speaking speed by default, the name allowed in the first reply's greeting, symbols like `*` stripped before speaking ("M*A*S*H*" was read as "M asterisk A…"), a 2.5s pause once a turn passes 12 words, and a 10s window for the sound meter's background level — from the learner's comparison test (normal speed best; cut off during longer talking; the name never used at all). Premium voice noted under PRD > Possible Later Enhancements.
 - Added a "talk to them, not about them" rule — in the learner's slice 3 test the companion once slipped into the third person ("sounds like he had a good time"), echoing the family's third-person background. Early checkpoint: headline handled calmly and steered back; police and movie stories handled well; the learner accepted the browser voice for now.
 - Kept `js/demo-answers.js` as a testing aid instead of removing it: `questionnaire.html?demo` fills in George's answers (handy for testing and the demo video) and `conversation.html?demo` uses them directly; without `?demo` the Conversation page only uses the family's saved answers.
+- Added question 9, a man's or woman's voice with "Hear it" samples (`js/voices.js`, shared by the questionnaire and conversation) — the learner made a profile for a woman ("Sarah") and it still spoke with Guy. Learner check for slice 4 passed: the pages look good and the companion knew who it was talking with.
+

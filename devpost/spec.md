@@ -132,7 +132,7 @@ PRD ref: `prd.md > Tailored Companion`; source: `scope.md > Inspiration & Identi
 ## Data Model
 | Data | Where it lives | How it's updated | When they leave and come back |
 |---|---|---|---|
-| Questionnaire answers `{name, ageAndOrigin, personality, interests, experiences, holdBack, communication, upsetting}` | Browser `sessionStorage` (`companionAnswers`) | Written once on submit | Survives a page refresh in the same tab; gone when the tab closes. A new visit starts from Home. |
+| Questionnaire answers `{name, ageAndOrigin, personality, interests, experiences, holdBack, communication, upsetting, voice}` (`voice` is "man" or "woman", used only by the page to pick a voice via `js/voices.js`) | Browser `sessionStorage` (`companionAnswers`) | Written once on submit | Survives a page refresh in the same tab; gone when the tab closes. A new visit starts from Home. |
 | Conversation history `[{role: "user"|"assistant", content}]` | JavaScript memory on the conversation page | A message added per turn | Cleared when the conversation ends or the page reloads |
 | Companion instructions | Built fresh on each request inside `api/chat.js` | Never stored | — |
 | `ANTHROPIC_API_KEY` | Vercel environment variable only | Set once by the learner | — |
