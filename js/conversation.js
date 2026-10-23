@@ -36,7 +36,20 @@ const statusText = document.getElementById("status");
 const debugLine = document.getElementById("debug");
 const interruptHint = document.getElementById("interrupt-hint");
 const debugMode = new URLSearchParams(location.search).has("debug");
-const elderName = (typeof DEMO_ANSWERS !== "undefined" && DEMO_ANSWERS.name) || "";
+// The family's questionnaire answers, saved for this visit by the questionnaire
+// page. For testing, ?demo uses the fictionalized demo elder instead.
+function loadAnswers() {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem("companionAnswers") || "null");
+    if (saved && saved.name) return saved;
+  } catch {
+    // Storage unavailable: fall through.
+  }
+  if (params.has("demo") && typeof DEMO_ANSWERS !== "undefined") return DEMO_ANSWERS;
+  return null;
+}
+const answers = loadAnswers();
+const elderName = answers ? answers.name : "";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -267,7 +280,7 @@ async function finishTurn() {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ answers: DEMO_ANSWERS, history }),
+      body: JSON.stringify({ answers, history }),
       signal: replyRequest.signal,
     });
     if (!response.ok) {
@@ -535,6 +548,12 @@ document.addEventListener("click", (event) => {
 });
 
 // ---- Start ----
+
+// Without answers there's no one to talk with yet: point the family back.
+if (!answers) {
+  startButton.hidden = true;
+  document.getElementById("not-set-up").hidden = false;
+}
 
 startButton.addEventListener("click", () => {
   if (!SpeechRecognition) {

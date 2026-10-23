@@ -34,6 +34,134 @@ h1 {
   margin: 0 0 24px;
 }
 
+a {
+  color: var(--terracotta);
+}
+
+/* ---- Shared ---- */
+
+.brand {
+  font-size: 1rem;
+  letter-spacing: 0.08em;
+  color: var(--soft-ink);
+  margin: 0 0 40px;
+}
+
+.brand a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lede {
+  font-size: 1.2rem;
+  color: var(--soft-ink);
+  margin: 0 auto 40px;
+  max-width: 34em;
+}
+
+.button {
+  display: inline-block;
+  padding: 18px 40px;
+  border: none;
+  border-radius: 999px;
+  background: var(--terracotta);
+  color: #fff;
+  font: inherit;
+  font-size: 1.3rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(200, 105, 63, 0.3);
+}
+
+.button:hover {
+  background: #b65a33;
+}
+
+.button:focus-visible {
+  outline: 4px solid var(--ink);
+  outline-offset: 4px;
+}
+
+/* ---- Home ---- */
+
+.home {
+  padding-top: 12vh;
+}
+
+.home h1 {
+  font-size: 2.8rem;
+}
+
+.subhead {
+  font-size: 1.6rem;
+  margin: 0 0 24px;
+}
+
+/* ---- Questionnaire ---- */
+
+.questionnaire {
+  text-align: left;
+}
+
+.questionnaire h1,
+.questionnaire .brand {
+  text-align: center;
+}
+
+.questionnaire .lede {
+  text-align: center;
+}
+
+form label {
+  display: block;
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin: 36px 0 10px;
+}
+
+form .help {
+  margin: -4px 0 10px;
+  color: var(--soft-ink);
+  font-size: 1.05rem;
+}
+
+form input,
+form textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--peach);
+  border-radius: 12px;
+  background: #fffdf9;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.15rem;
+  line-height: 1.5;
+}
+
+form input:focus,
+form textarea:focus {
+  outline: none;
+  border-color: var(--terracotta);
+}
+
+form .button {
+  display: block;
+  margin: 48px auto 0;
+}
+
+.error {
+  color: #a23b1d;
+  font-weight: 600;
+  margin: 8px 0 0;
+}
+
+.notice {
+  margin: 32px auto 0;
+  max-width: 30em;
+  font-size: 1.2rem;
+}
+
 /* The big round Start button on the Conversation page. */
 .start-button {
   width: 200px;

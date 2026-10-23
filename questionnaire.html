@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Getting to Know Your Loved One</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="questionnaire">
+    <p class="brand"><a href="/">conversationcompanion</a></p>
+    <h1>Getting to know your loved one</h1>
+    <p class="lede">Your answers shape how the companion talks, what it talks about, and what it leaves for your loved one to bring up. Only the name is required. Share what you know, in your own words.</p>
+
+    <form id="questionnaire" novalidate>
+      <label for="name">1. What name do they prefer to be called?</label>
+      <input id="name" name="name" type="text" autocomplete="off" required>
+      <p id="name-error" class="error" hidden>Please tell us what to call them.</p>
+
+      <label for="ageAndOrigin">2. About how old are they, and where did they grow up?</label>
+      <textarea id="ageAndOrigin" name="ageAndOrigin" rows="2"></textarea>
+
+      <label for="personality">3. How would you describe their personality?</label>
+      <textarea id="personality" name="personality" rows="3"></textarea>
+
+      <label for="interests">4. What subjects do they most enjoy talking about?</label>
+      <textarea id="interests" name="interests" rows="3"></textarea>
+
+      <label for="experiences">5. What work and life experiences are they proud of, and what stories do they love to tell?</label>
+      <textarea id="experiences" name="experiences" rows="4"></textarea>
+
+      <label for="holdBack">6. Which of those experiences should the companion know about but wait for them to bring up first?</label>
+      <p class="help">The companion won't mention these until your loved one does, so they stay the one telling their own stories.</p>
+      <textarea id="holdBack" name="holdBack" rows="3"></textarea>
+
+      <label for="communication">7. Do they have difficulty hearing or following conversation, and what helps?</label>
+      <textarea id="communication" name="communication" rows="3"></textarea>
+
+      <label for="upsetting">8. Are there subjects that upset them, and how should the companion respond if those come up?</label>
+      <textarea id="upsetting" name="upsetting" rows="3"></textarea>
+
+      <button type="submit" class="button">Create their companion</button>
+    </form>
+  </main>
+  <script src="/js/demo-answers.js"></script>
+  <script src="/js/questionnaire.js"></script>
+</body>
+</html>
