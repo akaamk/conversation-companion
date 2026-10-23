@@ -42,7 +42,17 @@ const FINAL_GOODBYE = "I'll let you go for now. It was good talking with you.";
 // Must match IDLE_NOTE in api/companion-instructions.js.
 const IDLE_NOTE = "(They haven't said anything for a while.)";
 
+// Said aloud when something goes wrong, or when it heard sound but no words.
+const SORRY_STOP = "I'm sorry, I need to stop for now.";
+const DIDNT_CATCH = "I didn't quite catch that. Could you say it again?";
+
+// "Didn't catch that": sound lasting at least this long with no words, at most
+// once in this long (so a cough or a door doesn't keep setting it off).
+const SOUND_NO_WORDS_MS = 1200;
+const DIDNT_CATCH_GAP_MS = 30000;
+
 const startButton = document.getElementById("start");
+const problemNote = document.getElementById("problem");
 const orb = document.getElementById("orb");
 const statusText = document.getElementById("status");
 const debugLine = document.getElementById("debug");
@@ -87,6 +97,12 @@ function setStatus(message) {
   statusText.textContent = message;
 }
 
+// A note for the family member (not the elder) when something needs fixing.
+function showProblem(message) {
+  problemNote.textContent = message;
+  problemNote.hidden = !message;
+}
+
 // The glowing orb: "listening", "thinking", "speaking", or null to hide it.
 function setOrb(state) {
   orb.hidden = !state;
@@ -123,6 +139,8 @@ let soundLevel = null;  // reads the microphone's current loudness, once set up
 let recentLevels = [];  // loudness readings from the last 10 seconds of listening
 let lastSound = 0;      // when the elder was last heard making sound
 let meter = null;       // the meter's microphone, audio and timer, so it can be turned off
+let soundStartedAt = 0; // when a stretch of sound with no words began
+let lastDidntCatch = -Infinity;
 
 // Ask for the microphone a second time, just to measure loudness. Speech
 // recognition doesn't tell us about sounds it can't turn into words.
@@ -173,8 +191,24 @@ function checkForSound() {
   if (recentLevels.length > 100) recentLevels.shift();
   const quietLevel = Math.min(...recentLevels);
   const makingSound = level > Math.max(quietLevel * 3, 0.01);
-  if (!makingSound) return;
+  if (!makingSound) {
+    // After a stretch of sound with no words and then a pause, ask again.
+    const soundLasted = lastSound - soundStartedAt;
+    const pausedSince = performance.now() - lastSound;
+    if (soundStartedAt && !heardText && soundLasted >= SOUND_NO_WORDS_MS && pausedSince > END_OF_TURN_MS) {
+      soundStartedAt = 0;
+      didntCatch();
+    } else if (pausedSince > END_OF_TURN_MS) {
+      soundStartedAt = 0;
+    }
+    return;
+  }
 
+  // Sound that lasts a while with no words at all: they spoke, but the browser
+  // couldn't make it out.
+  if (!heardText) {
+    soundStartedAt ||= performance.now();
+  }
   lastSound = performance.now();
   // Once the elder has started talking, sound keeps the turn open, up to a limit.
   const wordsRecently = performance.now() - timings.lastWord < SOUND_WITHOUT_WORDS_MS;
@@ -202,6 +236,7 @@ function pauseFor(text) {
 function startListening({ keepSilence = false } = {}) {
   if (!keepSilence) quietSince = performance.now();
   heardText = "";
+  soundStartedAt = 0;
   earlierText = "";
   micRestarts = 0;
   listening = true;
@@ -262,10 +297,27 @@ function setUpRecognition() {
     heardText = text.trim();
     timings.lastWord = performance.now();
     quietSince = timings.lastWord; // they're talking, so no silence check-in
+    soundStartedAt = 0;
 
     // Each new bit of speech restarts the quiet-pause timer.
     clearTimeout(endOfTurnTimer);
     endOfTurnTimer = setTimeout(finishTurn, pauseFor(heardText));
+  };
+
+  // Problems the family needs to fix: say so plainly and stop.
+  recognition.onerror = (event) => {
+    const problems = {
+      "not-allowed": "The microphone is blocked. Click the lock icon at the left of the address bar, set Microphone to Allow, then press Start.",
+      "service-not-allowed": "The microphone is blocked. Click the lock icon at the left of the address bar, set Microphone to Allow, then press Start.",
+      "audio-capture": "No microphone was found. Check that one is connected and turned on, then press Start.",
+      network: "Listening needs an internet connection. Check the connection, then press Start.",
+    };
+    if (problems[event.error]) {
+      endConversation();
+      showProblem(problems[event.error]);
+    } else if (event.error === "no-match" && listening) {
+      didntCatch();
+    }
   };
 
   // Edge often stops listening on its own after a short silence; restart if
@@ -321,6 +373,26 @@ function onSilence() {
     checkedIn = true;
     sendTurn(IDLE_NOTE);
   }
+}
+
+// Heard sound but no words: gently ask them to say it again (not too often).
+function didntCatch() {
+  if (!listening || heardText || performance.now() - lastDidntCatch < DIDNT_CATCH_GAP_MS) return;
+  lastDidntCatch = performance.now();
+  stopListening();
+  const speaker = sentenceSpeaker(++turnId, { remember: false });
+  currentSpeaker = speaker;
+  speaker.add(DIDNT_CATCH);
+  speaker.finish();
+}
+
+// The companion couldn't respond: say sorry, stop, and tell the family why.
+function stopForProblem(message) {
+  const speaker = sentenceSpeaker(++turnId, { endAfter: true, remember: false });
+  currentSpeaker = speaker;
+  speaker.onEnded = () => showProblem(message);
+  speaker.add(SORRY_STOP);
+  speaker.finish();
 }
 
 // Ends the conversation: microphone off (both the listening and the sound
@@ -387,8 +459,10 @@ async function sendTurn(said) {
     speaker.finish();
   } catch (error) {
     if (thisTurn !== turnId) return; // interrupted on purpose
-    endConversation();
-    setStatus(error.message);
+    const message = error instanceof TypeError
+      ? "The companion couldn't be reached. Check the internet connection, then press Start."
+      : `${error.message} Press Start to try again.`;
+    stopForProblem(message);
   }
 }
 
@@ -399,7 +473,7 @@ async function sendTurn(said) {
 function showTimings() {
   const seconds = (from, to) => ((to - from) / 1000).toFixed(1) + "s";
   showDebug(
-    `Heard: "${history[history.length - 1].content}"\n` +
+    `Heard: "${history.length ? history[history.length - 1].content : ""}"\n` +
       `Waiting for the pause: ${seconds(timings.lastWord, timings.sent)} · ` +
       `Claude's first words: ${seconds(timings.sent, timings.firstText)} · ` +
       `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
@@ -572,6 +646,7 @@ function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
       }
       if (endAfter) {
         endConversation();
+        api.onEnded?.();
       } else {
         startListening();
       }
@@ -609,7 +684,7 @@ function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
     }
   }
 
-  return {
+  const api = {
     add(text) {
       rawReply += text;
       pending += text;
@@ -620,8 +695,12 @@ function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
       flush();
       if (waiting.length === 0 && !speaking) {
         // Nothing came back at all.
-        setStatus("The companion couldn't respond.");
-        startButton.hidden = false;
+        if (thisTurn !== turnId) return;
+        if (endAfter) {
+          endConversation(); // only the end signal came back
+        } else {
+          stopForProblem("The companion didn't answer. Press Start to try again.");
+        }
         return;
       }
       maybeDone();
@@ -630,6 +709,7 @@ function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
       return spoken;
     },
   };
+  return api;
 }
 
 // ---- Tap to interrupt ----
@@ -661,7 +741,7 @@ if (!answers) {
 
 startButton.addEventListener("click", () => {
   if (!SpeechRecognition) {
-    setStatus("Please open this page in Chrome or Edge to talk with the companion.");
+    showProblem("This browser can't listen yet. Please open this page in Microsoft Edge or Google Chrome.");
     return;
   }
   if (!recognition) {
@@ -669,6 +749,7 @@ startButton.addEventListener("click", () => {
   }
   history = [];
   checkedIn = false;
+  showProblem("");
   startButton.hidden = true;
   startSoundMeter();
   startListening();

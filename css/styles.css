@@ -206,6 +206,13 @@ form .button {
   font-size: 1.2rem;
 }
 
+.problem {
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: #fbe6dc;
+  color: #7a2e12;
+}
+
 /* The big round Start button on the Conversation page. */
 .start-button {
   width: 200px;

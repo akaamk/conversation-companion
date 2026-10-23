@@ -56,15 +56,69 @@ export async function streamReply({ answers, history }, client, onText) {
 
 let client;
 
+// Limits that keep one request sensible: only the most recent part of a long
+// conversation is sent, and no single message can be enormous.
+export const MAX_TURNS = 40;
+export const MAX_MESSAGE_CHARS = 4000;
+
+// Checks the conversation the page sent. Returns the cleaned history, or an
+// error message to send back.
+export function cleanHistory(raw) {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return { error: "The conversation is empty." };
+  }
+  const messages = [];
+  for (const message of raw) {
+    if (!message || (message.role !== "user" && message.role !== "assistant") || typeof message.content !== "string") {
+      return { error: "The conversation isn't in the expected form." };
+    }
+    if (message.content.length > MAX_MESSAGE_CHARS) {
+      return { error: "That message is too long." };
+    }
+    messages.push({ role: message.role, content: message.content });
+  }
+  // Keep the most recent turns, starting with something the elder said.
+  let recent = messages.slice(-MAX_TURNS);
+  while (recent.length > 0 && recent[0].role !== "user") {
+    recent = recent.slice(1);
+  }
+  if (recent.length === 0) {
+    return { error: "The conversation is empty." };
+  }
+  return { history: recent };
+}
+
+// A short explanation for the family when something goes wrong with Claude.
+function problemMessage(error) {
+  if (error instanceof Anthropic.AuthenticationError || error instanceof Anthropic.PermissionDeniedError) {
+    return { status: 500, error: "The companion's key isn't working. Check ANTHROPIC_API_KEY in Vercel's settings." };
+  }
+  if (error instanceof Anthropic.RateLimitError) {
+    return { status: 503, error: "The companion is busy right now. Please try again in a minute." };
+  }
+  if (error instanceof Anthropic.APIError && error.status === 400 && /credit/i.test(error.message)) {
+    return { status: 503, error: "The companion's account is out of credit. Add credit in the Anthropic Console." };
+  }
+  if (error instanceof Anthropic.APIError) {
+    return { status: 502, error: "The companion couldn't respond. Please try again." };
+  }
+  return { status: 500, error: "The companion couldn't respond." };
+}
+
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     res.status(405).json({ error: "Use POST." });
     return;
   }
 
-  const history = Array.isArray(req.body?.history) ? req.body.history : [];
-  if (history.length === 0) {
-    res.status(400).json({ error: "The conversation is empty." });
+  const { history, error } = cleanHistory(req.body?.history);
+  if (error) {
+    res.status(400).json({ error });
+    return;
+  }
+
+  if (!process.env.ANTHROPIC_API_KEY) {
+    res.status(500).json({ error: "The companion isn't set up yet: ANTHROPIC_API_KEY is missing in Vercel's settings." });
     return;
   }
 
@@ -88,7 +142,8 @@ export default async function handler(req, res) {
     if (started) {
       res.end(); // the page notices the reply stopped short
     } else {
-      res.status(500).json({ error: "The companion couldn't respond." });
+      const problem = problemMessage(error);
+      res.status(problem.status).json({ error: problem.error });
     }
   }
 }
