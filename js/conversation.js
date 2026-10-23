@@ -41,12 +41,22 @@ function showDebug(text) {
 
 // ---- Choosing a voice ----
 
-// Prefer Edge's "Natural" voices, then Google's, then any US English voice.
+// Mature-sounding male voices, best first (Edge's "Natural" voices).
+const PREFERRED_VOICES = ["Christopher", "Roger", "Guy", "Eric", "Davis", "Andrew", "Brian", "Steffan"];
+
+// A voice can be tried out by adding ?voice=Name to the address.
+const requestedVoice = new URLSearchParams(location.search).get("voice");
+
 function pickVoice() {
   const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
+  const named = (part) => voices.find((v) => v.name.toLowerCase().includes(part.toLowerCase()));
+  const naturalNamed = (part) =>
+    voices.find((v) => /natural/i.test(v.name) && v.name.toLowerCase().includes(part.toLowerCase()));
+
   voice =
+    (requestedVoice && named(requestedVoice)) ||
+    PREFERRED_VOICES.map(naturalNamed).find(Boolean) ||
     voices.find((v) => v.lang === "en-US" && /natural/i.test(v.name)) ||
-    voices.find((v) => /natural/i.test(v.name)) ||
     voices.find((v) => v.lang === "en-US" && /google/i.test(v.name)) ||
     voices.find((v) => v.lang === "en-US") ||
     voices[0] ||
@@ -190,7 +200,7 @@ function sentenceSpeaker(thisTurn) {
       setStatus("Speaking…");
       timings.firstSpoken = performance.now();
       showDebug(
-        `Heard: "${history[history.length - 1].content}" · pause ${(END_OF_TURN_MS / 1000).toFixed(1)}s · first words after ${((timings.firstSpoken - timings.sent) / 1000).toFixed(1)}s`
+        `Heard: "${history[history.length - 1].content}" · pause ${(END_OF_TURN_MS / 1000).toFixed(1)}s · first words after ${((timings.firstSpoken - timings.sent) / 1000).toFixed(1)}s · voice ${voice ? voice.name : "default"}`
       );
     }
     queued++;

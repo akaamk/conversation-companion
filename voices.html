@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Voice Sampler</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    ul { list-style: none; padding: 0; text-align: left; }
+    li { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--peach); }
+    li span { flex: 1; }
+    li button { font-size: 1rem; padding: 8px 18px; border-radius: 999px; border: none; background: var(--terracotta); color: #fff; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Testing tool for choosing the companion's voice. Not part of the family's journey. -->
+    <h1>Voice sampler</h1>
+    <p>Press Play to hear each English voice this browser offers. "Natural" voices come first.</p>
+    <ul id="voices"></ul>
+  </main>
+  <script>
+    const SAMPLE = "Good afternoon. I was just thinking about the old ballparks in New York. Did you ever get out to a game?";
+    const list = document.getElementById("voices");
+
+    function render() {
+      const voices = speechSynthesis.getVoices()
+        .filter((v) => v.lang.startsWith("en"))
+        .sort((a, b) => /natural/i.test(b.name) - /natural/i.test(a.name));
+      list.innerHTML = "";
+      for (const voice of voices) {
+        const item = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = voice.name;
+        const play = document.createElement("button");
+        play.textContent = "Play";
+        play.onclick = () => {
+          speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(SAMPLE);
+          utterance.voice = voice;
+          utterance.rate = 0.9;
+          speechSynthesis.speak(utterance);
+        };
+        item.append(name, play);
+        list.append(item);
+      }
+    }
+
+    render();
+    speechSynthesis.onvoiceschanged = render;
+  </script>
+</body>
+</html>
