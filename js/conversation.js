@@ -80,7 +80,7 @@ let voice = null;
 let currentSpeaker = null; // speaks the reply for the current turn
 let timings = {};
 let voiceNote = ""; // for the testing line: set when the voice had to be switched
-let idleTimer = null;
+let quietSince = 0;     // when the elder last said actual words (or the companion finished speaking)
 let checkedIn = false;  // true once the companion has asked "are you still there?"
 
 function setStatus(message) {
@@ -197,7 +197,10 @@ function pauseFor(text) {
   return unfinished ? pause + UNFINISHED_EXTRA_MS : pause;
 }
 
-function startListening() {
+// keepSilence: the silence clock keeps running (used after a turn that turned
+// out to have no words, so empty results can't keep postponing the check-in).
+function startListening({ keepSilence = false } = {}) {
+  if (!keepSilence) quietSince = performance.now();
   heardText = "";
   earlierText = "";
   micRestarts = 0;
@@ -206,8 +209,6 @@ function startListening() {
   interruptHint.hidden = true;
   setStatus("Listening…");
   setOrb("listening");
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(onSilence, checkedIn ? IDLE_END_MS : IDLE_CHECK_MS);
   if (stopping) {
     return; // the microphone restarts once the old session has fully ended
   }
@@ -222,9 +223,16 @@ function stopListening() {
   listening = false;
   stopping = true;
   clearTimeout(endOfTurnTimer);
-  clearTimeout(idleTimer);
   recognition.stop();
 }
+
+// Every half second, check how long it's been since the elder said anything.
+setInterval(() => {
+  if (!listening || stopping || heardText) return;
+  if (performance.now() - quietSince > (checkedIn ? IDLE_END_MS : IDLE_CHECK_MS)) {
+    onSilence();
+  }
+}, 500);
 
 function setUpRecognition() {
   recognition = new SpeechRecognition();
@@ -247,9 +255,13 @@ function setUpRecognition() {
     for (let i = 0; i < event.results.length; i++) {
       text += " " + event.results[i][0].transcript;
     }
+    // Edge sometimes reports a result with no words in a quiet room: ignore it.
+    if (!text.trim() || text.trim() === heardText) {
+      return;
+    }
     heardText = text.trim();
     timings.lastWord = performance.now();
-    clearTimeout(idleTimer); // they're talking, so no silence check-in
+    quietSince = timings.lastWord; // they're talking, so no silence check-in
 
     // Each new bit of speech restarts the quiet-pause timer.
     clearTimeout(endOfTurnTimer);
@@ -287,7 +299,7 @@ async function finishTurn() {
   stopListening();
 
   if (!said) {
-    startListening();
+    startListening({ keepSilence: true });
     return;
   }
 
@@ -319,7 +331,6 @@ function endConversation() {
   listening = false;
   speaking = false;
   clearTimeout(endOfTurnTimer);
-  clearTimeout(idleTimer);
   if (replyRequest) replyRequest.abort();
   // Only stop listening if it's on: stopping it when it's already off would
   // leave the page waiting for a "stopped" signal that never comes.

@@ -259,30 +259,36 @@ form .button {
   background: radial-gradient(circle at 40% 35%, #fff1e2 0%, var(--peach) 45%, var(--terracotta) 100%);
   box-shadow: 0 0 60px rgba(200, 105, 63, 0.35);
   cursor: pointer;
+  transition: background 0.6s ease, box-shadow 0.6s ease, opacity 0.6s ease;
 }
 
-/* Listening: a slow, gentle breath. */
+/* Listening: soft sage green, a slow, gentle breath. */
 .orb.listening {
+  background: radial-gradient(circle at 40% 35%, #f1f7ee 0%, #b9d0b4 45%, #6f9a6f 100%);
+  box-shadow: 0 0 60px rgba(111, 154, 111, 0.4);
   animation: orb-breathe 3.2s ease-in-out infinite;
 }
 
-/* Thinking: dimmer and slower. */
+/* Thinking: pale gold, dimmer and slower. */
 .orb.thinking {
-  opacity: 0.6;
+  background: radial-gradient(circle at 40% 35%, #fffaeb 0%, #f4dca0 45%, #d6ac4e 100%);
+  box-shadow: 0 0 50px rgba(214, 172, 78, 0.35);
+  opacity: 0.75;
   animation: orb-dim 1.8s ease-in-out infinite;
 }
 
-/* Speaking: brighter and livelier. */
+/* Speaking: bright terracotta, livelier. */
 .orb.speaking {
+  background: radial-gradient(circle at 40% 35%, #ffe9d9 0%, #f0a77c 40%, #c8693f 100%);
   animation: orb-speak 0.9s ease-in-out infinite;
 }
 
 @keyframes orb-breathe {
-  50% { transform: scale(1.06); box-shadow: 0 0 80px rgba(200, 105, 63, 0.45); }
+  50% { transform: scale(1.06); box-shadow: 0 0 85px rgba(111, 154, 111, 0.5); }
 }
 
 @keyframes orb-dim {
-  50% { opacity: 0.4; transform: scale(0.97); }
+  50% { opacity: 0.5; transform: scale(0.97); }
 }
 
 @keyframes orb-speak {
@@ -291,7 +297,7 @@ form .button {
 
 @media (prefers-reduced-motion: reduce) {
   .orb { animation: none !important; }
-  .orb.thinking { opacity: 0.6; }
+  .orb.thinking { opacity: 0.75; }
   .orb.speaking { box-shadow: 0 0 110px rgba(200, 105, 63, 0.6); }
 }
 
