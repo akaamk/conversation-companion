@@ -8,6 +8,11 @@ const END_OF_TURN_MS = 1500;
 // Extra time to wait when the words so far sound unfinished ("yeah, um…").
 // The browser doesn't write down "um" or "uh", so a hesitation looks like silence.
 const UNFINISHED_EXTRA_MS = 2000;
+
+// Someone telling a longer story gets a longer pause before the companion
+// answers (after this many words in a turn).
+const STORY_WORDS = 12;
+const STORY_PAUSE_MS = 2500;
 const UNFINISHED_ENDINGS = [
   "yeah", "yes", "well", "so", "and", "but", "or", "because", "um", "uh", "er", "hmm",
   "let me", "i mean", "you know", "like", "the", "a", "an", "to", "of", "with", "about",
@@ -23,8 +28,8 @@ const SOUND_WITHOUT_WORDS_MS = 6000;
 // turns off the sound meter (to compare how the voice sounds without it).
 const params = new URLSearchParams(location.search);
 
-// Speaking pace: a little slower than normal (1 is normal).
-const SPEAKING_RATE = Number(params.get("rate")) || 0.9;
+// Speaking pace (1 is normal). Slower made Edge's online voices sound choppy.
+const SPEAKING_RATE = Number(params.get("rate")) || 1;
 
 const startButton = document.getElementById("start");
 const statusText = document.getElementById("status");
@@ -94,7 +99,7 @@ if ("speechSynthesis" in window) {
 // ---- Sound meter ----
 
 let soundLevel = null;  // reads the microphone's current loudness, once set up
-let recentLevels = [];  // loudness readings from the last 5 seconds of listening
+let recentLevels = [];  // loudness readings from the last 10 seconds of listening
 let lastSound = 0;      // when the elder was last heard making sound
 
 // Ask for the microphone a second time, just to measure loudness. Speech
@@ -127,11 +132,11 @@ async function startSoundMeter() {
 function checkForSound() {
   if (!listening || stopping) return;
   const level = soundLevel();
-  // The room's background level is the quietest moment in the last 5 seconds.
+  // The room's background level is the quietest moment in the last 10 seconds.
   // Speech has tiny gaps between words, so talking doesn't fool it, and it
   // adjusts by itself to a fan or a TV.
   recentLevels.push(level);
-  if (recentLevels.length > 50) recentLevels.shift();
+  if (recentLevels.length > 100) recentLevels.shift();
   const quietLevel = Math.min(...recentLevels);
   const makingSound = level > Math.max(quietLevel * 3, 0.01);
   if (!makingSound) return;
@@ -154,7 +159,8 @@ function pauseFor(text) {
   const lastTwo = words.slice(-2).join(" ");
   const sentenceEnded = /[.!?]$/.test(text.trim());
   const unfinished = !sentenceEnded && (UNFINISHED_ENDINGS.includes(lastOne) || UNFINISHED_ENDINGS.includes(lastTwo));
-  return unfinished ? END_OF_TURN_MS + UNFINISHED_EXTRA_MS : END_OF_TURN_MS;
+  const pause = words.length > STORY_WORDS ? STORY_PAUSE_MS : END_OF_TURN_MS;
+  return unfinished ? pause + UNFINISHED_EXTRA_MS : pause;
 }
 
 function startListening() {
@@ -317,10 +323,20 @@ function localVoice() {
   return voices.find((v) => v.localService && v.lang === "en-US") || voices.find((v) => v.localService) || null;
 }
 
+// Symbols the voice would read aloud ("M asterisk A asterisk…"): remove them.
+function speakable(text) {
+  return text
+    .replace(/[*_#`~|<>\[\]{}]/g, "")
+    .replace(/&/g, " and ")
+    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "");
+}
+
 // Removes the elder's name where it's tacked on: "That's grand, George." becomes
 // "That's grand." and a lone "George." disappears. A name inside a sentence stays.
+// The very first reply may use the name in its greeting.
 function withoutTackedOnName(text) {
-  if (!elderName) return text;
+  const firstReply = !history.some((message) => message.role === "assistant");
+  if (!elderName || firstReply) return text;
   const name = elderName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return text
     .replace(new RegExp(`(^|[.!?]\\s+)${name}([.!?])\\s*`, "g"), "$1")
@@ -354,7 +370,7 @@ function sentenceSpeaker(thisTurn) {
   }
 
   function say(sentence) {
-    sentence = withoutTackedOnName(sentence);
+    sentence = speakable(withoutTackedOnName(sentence));
     if (!sentence.trim()) return;
     if (!speaking) {
       speaking = true;

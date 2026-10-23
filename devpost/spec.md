@@ -97,7 +97,7 @@ Uses `webkitSpeechRecognition` with `continuous = true`, `interimResults = true`
 PRD ref: `prd.md > Voice Conversation` ("can talk at length without being cut off").
 
 #### Speaking
-`speechSynthesis` with a preferred English voice (prefer en-US names containing "Natural" on Edge), `rate ≈ 0.9` for a measured pace. The reply arrives in pieces as Claude writes it (see `Chat Helper`); each sentence is spoken as soon as it's complete, and when the last one ends, listening resumes.
+`speechSynthesis` with a preferred English voice (prefer en-US names containing "Natural" on Edge), normal speed (`rate` 1; 0.9 made Edge's online voices sound choppy in live testing), Edge's "Guy" voice first (learner's choice). The reply arrives in pieces as Claude writes it (see `Chat Helper`); each sentence is spoken as soon as it's complete, and when the last one ends, listening resumes.
 **Testing line:** adding `?debug` to the page address shows what the browser heard and how long each part took (pause, first words, full reply). Hidden otherwise.
 **Tap to interrupt:** a tap or click anywhere on the page while speaking calls `speechSynthesis.cancel()` and starts listening immediately (the microphone stays off while speaking, so the companion can't hear itself).
 PRD ref: `prd.md > Voice Conversation`.

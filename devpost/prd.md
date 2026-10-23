@@ -115,6 +115,7 @@ Source: `scope.md > The POC Boundary` (voice in and out).
 ## Possible Later Enhancements
 - Voice-activated start ("Hey, let's chat").
 - Interrupting by speaking (needs a real-time voice model so the companion doesn't hear itself).
+- A premium voice service (for example Microsoft's Azure speech service, the source of the "Guy" voice) for a more natural, less robotic sound than the browser's voices.
 - Saved profiles for multiple families; the elder adding or correcting their own information.
 - Family feedback and "is it making a difference?" questions.
 - Choice of voice (gender, accent, pace) from the questionnaire.
