@@ -49,7 +49,7 @@ Build mode: learn
   Learner check: On your link, go from Home through the questionnaire using the demo elder's answers, then talk. Does the companion know who it's talking with?
   Commit: `Add home page and family questionnaire`
 
-- [ ] **5. It feels like a calm, natural conversation for an elder**
+- [x] **5. It feels like a calm, natural conversation for an elder**
   Becomes usable: The glowing orb breathes while listening, dims while thinking, and pulses while speaking. Long stories with pauses aren't cut off. "Bye" ends warmly, and a long silence gets "Are you still there?" then a goodbye. All pages have the warm, large-text look.
   Why now: The core journey works, so now we make it feel right for the person using it. Doing this after the early checkpoint lets your feedback set the timing and feel.
   PRD ref: `prd.md > Voice Conversation`, `prd.md > Ending a Conversation`, `prd.md > Look and Feel`
@@ -112,3 +112,5 @@ Activity mode:
 
 - Ending a conversation also turns off the sound meter's microphone (added in slice 2), and the silence check-in is sent as a note in place of the elder's words rather than a hidden system message; `&idle=` testing switch added. Found and fixed while testing: pressing Start after a goodbye would never start listening.
 - Silence is now measured from the elder's last real words with a half-second check, and empty speech results are ignored — in the learner's live test the check-in never came after 2 minutes; reproduced: Edge's empty results in a quiet room kept resetting the timer. Orb states now have distinct colors (listening sage green, thinking pale gold, speaking terracotta) at the learner's request.
+- Slice 5 learner check passed: goodbye ends the conversation and brings back Start (the learner kept how it ended when they said their grandson was calling), the silence check-in works, the orb colors are clear, and the woman's voice is used when chosen.
+
