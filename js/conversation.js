@@ -19,6 +19,8 @@ const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecogni
 let recognition = null;
 let history = [];       // the conversation so far: [{ role, content }]
 let heardText = "";     // what the elder has said in this turn
+let earlierText = "";   // words from before the browser restarted its listening, this turn
+let micRestarts = 0;    // for the testing line: how often the browser restarted listening this turn
 let endOfTurnTimer = null;
 let listening = false;  // true while we want the microphone on
 let stopping = false;   // true while the browser is still shutting the microphone off
@@ -74,6 +76,8 @@ if ("speechSynthesis" in window) {
 
 function startListening() {
   heardText = "";
+  earlierText = "";
+  micRestarts = 0;
   listening = true;
   speaking = false;
   interruptHint.hidden = true;
@@ -111,9 +115,10 @@ function setUpRecognition() {
     // Collect everything heard so far in this turn. The browser sends a quick
     // first guess and later a cleaned-up final version; use the final version
     // where we have it and the first guess for the rest, so we never wait on it.
-    let text = "";
+    // Each listening session starts a fresh list, so add what came before.
+    let text = earlierText;
     for (let i = 0; i < event.results.length; i++) {
-      text += event.results[i][0].transcript + " ";
+      text += " " + event.results[i][0].transcript;
     }
     heardText = text.trim();
     timings.lastWord = performance.now();
@@ -123,10 +128,21 @@ function setUpRecognition() {
     endOfTurnTimer = setTimeout(finishTurn, END_OF_TURN_MS);
   };
 
-  // Some browsers stop listening on their own after a while; restart if we still want it on.
+  // Edge often stops listening on its own after a short silence; restart if
+  // we still want it on. Keep the words heard so far, and don't count the
+  // restart gap as part of the elder's pause.
   recognition.onend = () => {
+    const wasOurStop = stopping;
     stopping = false;
     if (listening) {
+      if (!wasOurStop) {
+        earlierText = heardText;
+        micRestarts++;
+        if (heardText) {
+          clearTimeout(endOfTurnTimer);
+          endOfTurnTimer = setTimeout(finishTurn, END_OF_TURN_MS);
+        }
+      }
       try {
         recognition.start();
       } catch {
@@ -150,7 +166,8 @@ async function finishTurn() {
   const thisTurn = ++turnId;
   history.push({ role: "user", content: said });
   setStatus("Thinking…");
-  timings = { lastWord: timings.lastWord, sent: performance.now() };
+  timings = { lastWord: timings.lastWord, sent: performance.now(), micRestarts };
+  voiceNote = "";
   showDebug(`Heard: "${said}"`);
 
   const speaker = sentenceSpeaker(thisTurn);
@@ -198,8 +215,9 @@ function showTimings() {
       `Waiting for the pause: ${seconds(timings.lastWord, timings.sent)} · ` +
       `Claude's first words: ${seconds(timings.sent, timings.firstText)} · ` +
       `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
-      `Total: ${seconds(timings.lastWord, timings.voiceStart)}\n` +
-      `Voice: ${voice ? voice.name : "browser default"}${voiceNote}`
+      `Total: ${seconds(timings.lastWord, timings.voiceStart)} · ` +
+      `Listening restarts: ${timings.micRestarts}\n` +
+      `Voice: ${timings.voiceName || "browser default"}${voiceNote}`
   );
 }
 
@@ -224,7 +242,7 @@ function sentenceSpeaker(thisTurn) {
   const waiting = [];  // sentences handed to the voice but not yet finished
   let finished = false;
   let attempt = 0;     // goes up if the voice gets stuck and we start over
-  let retried = false;
+  let replyVoice = voice; // the voice for this reply; the next reply starts with the usual voice again
   let playing = false; // a sentence is being heard right now
   let lastVoiceActivity = 0;
   let watchdog = null;
@@ -261,7 +279,7 @@ function sentenceSpeaker(thisTurn) {
     const utterance = new SpeechSynthesisUtterance(sentence.trim());
     utterance.lang = "en-US";
     utterance.rate = SPEAKING_RATE;
-    if (voice) utterance.voice = voice;
+    if (replyVoice) utterance.voice = replyVoice;
     activeUtterances.add(utterance);
 
     utterance.onstart = () => {
@@ -271,6 +289,7 @@ function sentenceSpeaker(thisTurn) {
       spoken += sentence;
       if (timings.voiceStart === undefined) {
         timings.voiceStart = performance.now();
+        timings.voiceName = replyVoice ? replyVoice.name : "";
         showTimings();
       }
     };
@@ -294,28 +313,39 @@ function sentenceSpeaker(thisTurn) {
     speechSynthesis.speak(utterance);
   }
 
-  // Start over with a voice that runs on the computer itself. If that also
-  // gets stuck, give up on this reply and go back to listening.
+  // If the voice fails: first try the same voice again (Edge's online voices
+  // sometimes fail once right after being stopped), then a voice that runs on
+  // the computer itself, just for this reply. After that, skip the reply.
   function recoverFromStuckVoice() {
     attempt++;
     playing = false;
     lastVoiceActivity = performance.now();
     speechSynthesis.cancel();
     const unspoken = waiting.splice(0);
-    voiceNote = retried ? " (the voice didn't play again; skipped a reply)" : " (the online voice didn't play; switched to this one)";
-    showDebug(voiceNote);
-    if (retried) {
+
+    if (attempt === 1) {
+      voiceNote = " (the voice didn't play; tried it again)";
+    } else if (attempt === 2) {
+      replyVoice = localVoice() || replyVoice;
+      voiceNote = " (the online voice didn't play twice; used a voice on this computer for one reply)";
+    } else {
+      voiceNote = " (no voice would play; skipped a reply)";
+      showDebug(voiceNote);
       finished = true;
       maybeDone();
       return;
     }
-    retried = true;
-    voice = localVoice() || voice;
-    for (const sentence of unspoken) {
-      waiting.push(sentence);
-      play(sentence);
-    }
-    maybeDone();
+    showDebug(voiceNote);
+
+    // A short wait gives the browser's voice a moment to reset.
+    setTimeout(() => {
+      if (thisTurn !== turnId) return;
+      for (const sentence of unspoken) {
+        waiting.push(sentence);
+        play(sentence);
+      }
+      maybeDone();
+    }, 400);
   }
 
   function maybeDone() {
