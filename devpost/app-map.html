@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conversation Companion App Map</title>
+<style>
+  :root {
+    --bg: #fbf6ee; --surface: #ffffff; --text: #3b2f2a; --muted: #6e5d54;
+    --line: #eadfce; --accent: #c8693f; --accent-soft: #f8e6da;
+    --sage: #5f8a5f; --sage-soft: #e5efe3; --gold: #a8812a; --gold-soft: #f6ecd2;
+    --blue: #3f6488; --blue-soft: #e1eaf3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1d1916; --surface: #27221e; --text: #efe7dd; --muted: #a99c90;
+      --line: #3b342e; --accent: #e5906a; --accent-soft: #3b2a21;
+      --sage: #94c094; --sage-soft: #213023; --gold: #e0be6a; --gold-soft: #352d17;
+      --blue: #93b6db; --blue-soft: #1d2a37;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1d1916; --surface: #27221e; --text: #efe7dd; --muted: #a99c90;
+    --line: #3b342e; --accent: #e5906a; --accent-soft: #3b2a21;
+    --sage: #94c094; --sage-soft: #213023; --gold: #e0be6a; --gold-soft: #352d17;
+    --blue: #93b6db; --blue-soft: #1d2a37;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.6 "Segoe UI", system-ui, sans-serif; }
+  main { max-width: 820px; margin: 0 auto; padding: 40px 16px 80px; }
+  .eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 2rem; line-height: 1.2; margin: 8px 0 10px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 10px; }
+  h3 { font-size: 1.05rem; margin: 0 0 6px; }
+  .lede { color: var(--muted); font-size: 1.1rem; margin: 0; }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 12px 0; }
+  code { font: 14px/1.4 Consolas, ui-monospace, monospace; background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+  .pieces { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+  .pieces .card { margin: 0; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { font-family: "Segoe UI", system-ui, sans-serif; fill: var(--text); }
+  .b-page { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .b-helper { fill: var(--sage-soft); stroke: var(--sage); stroke-width: 1.5; }
+  .b-ext { fill: var(--blue-soft); stroke: var(--blue); stroke-width: 1.5; }
+  .b-person { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .ln { stroke: var(--muted); stroke-width: 2; fill: none; }
+  .small { font-size: 12px; fill: var(--muted); }
+  ol.route { padding-left: 0; list-style: none; counter-reset: stop; }
+  ol.route > li { counter-increment: stop; position: relative; padding-left: 52px; margin: 0 0 18px; }
+  ol.route > li::before { content: counter(stop); position: absolute; left: 0; top: 2px; width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; display: grid; place-items: center; }
+  .where { font-size: 14px; color: var(--muted); }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin: 10px 0; }
+  summary { cursor: pointer; padding: 14px 18px; font-weight: 600; }
+  details > div { padding: 0 18px 16px; }
+  ul.change { padding-left: 20px; margin: 0; }
+  ul.change li { margin: 8px 0; }
+  .practice { border-left: 4px solid var(--sage); }
+  footer { margin-top: 48px; font-size: 13px; color: var(--muted); }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">App map</div>
+  <h1>Conversation Companion</h1>
+  <p class="lede">A family answers nine questions about their loved one, and the answers become a voice companion tailored to that person, one that knows their stories but lets them tell them.</p>
+
+  <h2>The main pieces</h2>
+  <div class="pieces">
+    <div class="card"><h3>Three web pages</h3><code>index.html</code> (Home), <code>questionnaire.html</code> (the nine questions), <code>conversation.html</code> (Start button and glowing orb).</div>
+    <div class="card"><h3>The page's behavior</h3><code>js/questionnaire.js</code> saves the answers; <code>js/conversation.js</code> listens, decides when a turn is over, speaks replies, and ends conversations; <code>js/voices.js</code> picks the voice.</div>
+    <div class="card"><h3>The helper on Vercel</h3><code>api/chat.js</code> holds the secret key and asks Claude Haiku 5.5 for a reply; <code>api/companion-instructions.js</code> turns the answers into the companion's instructions.</div>
+  </div>
+
+  <h2>One action, followed through the code</h2>
+  <p class="lede">A family writes a story in question 6, and the companion knows it but waits to be told.</p>
+  <div class="card">
+    <svg viewBox="0 0 760 250" role="img" aria-label="Question 6 is saved by questionnaire.js, sent by conversation.js to the helper, built into instructions, and sent to Claude, which waits for the elder to bring the story up">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a7f74"/></marker></defs>
+      <rect class="b-person" x="10" y="20" width="160" height="70" rx="12"/>
+      <text x="90" y="50" text-anchor="middle" font-size="14" font-weight="600">Family writes Q6</text>
+      <text x="90" y="70" text-anchor="middle" class="small">"his years on the beat"</text>
+      <rect class="b-page" x="210" y="20" width="160" height="70" rx="12"/>
+      <text x="290" y="50" text-anchor="middle" font-size="14" font-weight="600">1 · Saved</text>
+      <text x="290" y="70" text-anchor="middle" class="small">js/questionnaire.js</text>
+      <rect class="b-page" x="410" y="20" width="160" height="70" rx="12"/>
+      <text x="490" y="50" text-anchor="middle" font-size="14" font-weight="600">2 · Sent each turn</text>
+      <text x="490" y="70" text-anchor="middle" class="small">js/conversation.js</text>
+      <rect class="b-helper" x="410" y="150" width="160" height="70" rx="12"/>
+      <text x="490" y="180" text-anchor="middle" font-size="14" font-weight="600">3 · Built into rules</text>
+      <text x="490" y="200" text-anchor="middle" class="small">companion-instructions.js</text>
+      <rect class="b-ext" x="610" y="150" width="140" height="70" rx="12"/>
+      <text x="680" y="180" text-anchor="middle" font-size="14" font-weight="600">Claude</text>
+      <text x="680" y="200" text-anchor="middle" class="small">waits to be told</text>
+      <rect class="b-person" x="210" y="150" width="160" height="70" rx="12"/>
+      <text x="290" y="180" text-anchor="middle" font-size="14" font-weight="600">What you hear</text>
+      <text x="290" y="200" text-anchor="middle" class="small">no mention until he does</text>
+      <path class="ln" d="M170 55 H204" marker-end="url(#ah)"/>
+      <path class="ln" d="M370 55 H404" marker-end="url(#ah)"/>
+      <path class="ln" d="M490 90 V144" marker-end="url(#ah)"/>
+      <path class="ln" d="M570 185 H604" marker-end="url(#ah)"/>
+      <path class="ln" d="M610 205 C 560 240, 420 240, 376 205" marker-end="url(#ah)"/>
+      <text x="520" y="245" text-anchor="middle" class="small">reply streamed back and spoken</text>
+    </svg>
+  </div>
+
+  <h2>The route through the code</h2>
+  <ol class="route">
+    <li>
+      <h3>The answer is saved</h3>
+      <div class="where"><code>js/questionnaire.js</code> · search for <code>form.addEventListener("submit"</code> and <code>sessionStorage.setItem</code></div>
+      <p>When the family presses <strong>Create their companion</strong>, every answer, including question 6 (<code>holdBack</code>), is saved in the browser for this visit under the name <code>companionAnswers</code>. Nothing leaves the computer yet.</p>
+    </li>
+    <li>
+      <h3>The answers go along with every turn</h3>
+      <div class="where"><code>js/conversation.js</code> · search for <code>function loadAnswers</code> and <code>JSON.stringify({ answers, history })</code></div>
+      <p>The Conversation page reads the saved answers when it opens. Each time the elder finishes speaking, it sends the answers and the conversation so far to the helper at <code>/api/chat</code>.</p>
+    </li>
+    <li>
+      <h3>The answers become the companion's rules</h3>
+      <div class="where"><code>api/companion-instructions.js</code> · search for <code>export function buildInstructions</code> and <code>HOLD_BACK_RULE</code>; used in <code>api/chat.js</code> at <code>system: buildInstructions(answers)</code></div>
+      <p>Your original GPT rules come first, then an "About the person" section from the answers. Question 6 gets its own section, starting "LET THEM INTRODUCE THESE STORIES" and listing "Know but do not mention first", so Claude has the background but is told to wait for the elder to bring it up.</p>
+    </li>
+  </ol>
+
+  <h2>To change this, start here</h2>
+  <div class="card">
+    <ul class="change">
+      <li><strong>How the companion behaves</strong> (tone, topics, rules): <code>api/companion-instructions.js</code>, the <code>CORE_RULES</code> text.</li>
+      <li><strong>The questions</strong>: <code>questionnaire.html</code> for the wording; add any new field to <code>FIELDS</code> in <code>js/questionnaire.js</code> and to <code>ANSWER_FIELDS</code> in <code>api/chat.js</code>.</li>
+      <li><strong>The pause before it answers</strong>: <code>END_OF_TURN_MS</code> (1.5 seconds), <code>STORY_PAUSE_MS</code> and <code>UNFINISHED_ENDINGS</code> near the top of <code>js/conversation.js</code>.</li>
+      <li><strong>The silence check-in</strong>: <code>IDLE_CHECK_MS</code>, <code>IDLE_END_MS</code> and <code>FINAL_GOODBYE</code> in <code>js/conversation.js</code>.</li>
+      <li><strong>The voices</strong>: <code>PREFERRED_VOICES</code> in <code>js/voices.js</code> (Guy first for a man's voice).</li>
+      <li><strong>The look</strong>: <code>css/styles.css</code>; the orb colors are under "The glowing orb".</li>
+      <li><strong>The AI model</strong>: <code>MODEL</code> in <code>api/chat.js</code> (<code>claude-haiku-5-5</code>; <code>claude-opus-5-5</code> is the one-line switch).</li>
+    </ul>
+  </div>
+
+  <h2>A practice to reuse</h2>
+  <div class="card practice">
+    <p style="margin-top:0"><strong>Measure before you fix.</strong> When replies felt slow, the conversation page got a testing line (<code>?debug</code>) that split the wait into the pause, Claude's first words, and the voice starting. Your numbers (about 2.0s + 0.8–1.5s + 0.3–1.3s) showed the pause was the biggest piece, so the decision about the pause was yours to make, and it went from 2.5s to 2s to 1.5s. The same testing line later showed Edge reporting a confidence of 1.0 even for gibberish, which ruled out one fix and pointed to another.</p>
+    <p style="margin-bottom:0">On another project: when something feels wrong, ask the agent to add a small, temporary readout of what's actually happening before changing anything. Then decide from the evidence rather than a guess. (See <code>showTimings</code> in <code>js/conversation.js</code> and the Revisions in <code>devpost/checklist.md</code>.)</p>
+  </div>
+
+  <h2>Run it again</h2>
+  <details open>
+    <summary>Open and test the live app</summary>
+    <div>
+      <p style="margin-top:0">Open <a href="https://conversation-companion-sand.vercel.app/">conversation-companion-sand.vercel.app</a> in Microsoft Edge or Google Chrome. Every push to the GitHub repository's <code>main</code> branch updates it automatically through Vercel.</p>
+      <ul class="change">
+        <li><code>/questionnaire.html?demo</code>: fills in the demo person, George</li>
+        <li><code>/conversation.html?demo&amp;debug</code>: talk to George and see the testing line</li>
+        <li><code>&amp;idle=10000</code>: a quicker silence check-in for testing</li>
+        <li><code>/voices.html</code>: hear every available voice</li>
+      </ul>
+    </div>
+  </details>
+
+  <footer>A snapshot of the code at commit <code>33c288d</code>. The code can change after this, so search for the names shown above if anything has moved.</footer>
+</main>
+</body>
+</html>

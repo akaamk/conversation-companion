@@ -72,12 +72,12 @@ Build mode: learn
 ## Hands-on Checkpoints
 
 - [x] Early usable behavior explored — after slice 3 (talking with the tailored demo companion on the live link); feedback shapes slices 4–6
-- [ ] Final kick-the-tires exploration and feedback completed
+- [x] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
 
-- [ ] Mumbling sometimes got a reply instead of "say it again": treat short, low-confidence speech as not caught (learner's final-review finding). Done: a turn of up to 4 words the browser is less than 0.5 sure of gets "say it again" (at most once in 30s); `?debug` shows how sure it was. Verified with 6 new checks. Learner retry: Edge reports confidence 1.0 even for gibberish, so the check only helps in browsers that report real confidence; Claude's instructions now say to ask again when what it received doesn't make sense, and to carry on when only a word or two is unclear
-- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+- [x] Mumbling sometimes got a reply instead of "say it again": treat short, low-confidence speech as not caught (learner's final-review finding). Done: a turn of up to 4 words the browser is less than 0.5 sure of gets "say it again" (at most once in 30s); `?debug` shows how sure it was. Verified with 6 new checks. Learner retry: Edge reports confidence 1.0 even for gibberish, so the check only helps in browsers that report real confidence; Claude's instructions now say to ask again when what it received doesn't make sense, and to carry on when only a word or two is unclear. Learner retried: gibberish now gets "say it again"; the learner had nothing else to change
+- [x] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
 
