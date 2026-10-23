@@ -42,7 +42,7 @@ function showDebug(text) {
 // ---- Choosing a voice ----
 
 // Mature-sounding male voices, best first (Edge's "Natural" voices).
-const PREFERRED_VOICES = ["Christopher", "Roger", "Guy", "Eric", "Davis", "Andrew", "Brian", "Steffan"];
+const PREFERRED_VOICES = ["Guy", "Christopher", "Roger", "Eric", "Davis", "Andrew", "Brian", "Steffan"];
 
 // A voice can be tried out by adding ?voice=Name to the address.
 const requestedVoice = new URLSearchParams(location.search).get("voice");
@@ -105,14 +105,14 @@ function setUpRecognition() {
       return;
     }
 
-    // Collect every finished phrase heard so far in this turn.
-    let finalText = "";
+    // Collect everything heard so far in this turn. The browser sends a quick
+    // first guess and later a cleaned-up final version; use the final version
+    // where we have it and the first guess for the rest, so we never wait on it.
+    let text = "";
     for (let i = 0; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        finalText += event.results[i][0].transcript + " ";
-      }
+      text += event.results[i][0].transcript + " ";
     }
-    heardText = finalText.trim();
+    heardText = text.trim();
     timings.lastWord = performance.now();
 
     // Each new bit of speech restarts the quiet-pause timer.
@@ -147,7 +147,7 @@ async function finishTurn() {
   const thisTurn = ++turnId;
   history.push({ role: "user", content: said });
   setStatus("Thinking…");
-  timings.sent = performance.now();
+  timings = { lastWord: timings.lastWord, sent: performance.now() };
   showDebug(`Heard: "${said}"`);
 
   const speaker = sentenceSpeaker(thisTurn);
@@ -173,6 +173,7 @@ async function finishTurn() {
       const { done, value } = await reader.read();
       if (done) break;
       if (thisTurn !== turnId) return; // interrupted
+      timings.firstText ??= performance.now();
       speaker.add(decoder.decode(value, { stream: true }));
     }
     speaker.finish();
@@ -184,6 +185,20 @@ async function finishTurn() {
 }
 
 // ---- Speaking ----
+
+// For the ?debug testing line: where the time went between the elder's last
+// word and the companion's first word.
+function showTimings() {
+  const seconds = (from, to) => ((to - from) / 1000).toFixed(1) + "s";
+  showDebug(
+    `Heard: "${history[history.length - 1].content}"\n` +
+      `Waiting for the pause: ${seconds(timings.lastWord, timings.sent)} · ` +
+      `Claude's first words: ${seconds(timings.sent, timings.firstText)} · ` +
+      `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
+      `Total: ${seconds(timings.lastWord, timings.voiceStart)}\n` +
+      `Voice: ${voice ? voice.name : "browser default"}`
+  );
+}
 
 // Collects the reply as it streams in and speaks each sentence as soon as
 // it is complete. When the last sentence has been spoken, listening resumes.
@@ -198,10 +213,6 @@ function sentenceSpeaker(thisTurn) {
     if (!speaking) {
       speaking = true;
       setStatus("Speaking…");
-      timings.firstSpoken = performance.now();
-      showDebug(
-        `Heard: "${history[history.length - 1].content}" · pause ${(END_OF_TURN_MS / 1000).toFixed(1)}s · first words after ${((timings.firstSpoken - timings.sent) / 1000).toFixed(1)}s · voice ${voice ? voice.name : "default"}`
-      );
     }
     queued++;
     const utterance = new SpeechSynthesisUtterance(sentence.trim());
@@ -209,7 +220,12 @@ function sentenceSpeaker(thisTurn) {
     utterance.rate = SPEAKING_RATE;
     if (voice) utterance.voice = voice;
     utterance.onstart = () => {
-      if (thisTurn === turnId) spoken += sentence;
+      if (thisTurn !== turnId) return;
+      spoken += sentence;
+      if (timings.voiceStart === undefined) {
+        timings.voiceStart = performance.now();
+        showTimings();
+      }
     };
     utterance.onend = () => {
       queued--;

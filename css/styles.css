@@ -64,6 +64,7 @@ h1 {
   font-size: 0.85rem;
   color: var(--soft-ink);
   font-family: Consolas, monospace;
+  white-space: pre-line;
 }
 
 [hidden] {
