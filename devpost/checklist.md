@@ -81,7 +81,7 @@ Build mode: learn
 
 ## Code Tour and App Map
 
-- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
 - [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
