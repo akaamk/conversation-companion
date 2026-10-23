@@ -1,0 +1,83 @@
+---
+doc: checklist
+status: approved
+---
+
+# Build Checklist
+
+Build mode: learn
+
+## Slices
+
+- [ ] **1. You speak and hear Claude answer aloud, on your own link**
+  Becomes usable: A live Vercel link with a Conversation page. Press Start, say something, and hear a reply from Claude Haiku 5.5 spoken back, using a simple placeholder companion. The loop repeats until you reload.
+  Why now: Biggest risk first, and it settles your useful unknown ("voice companions aren't doable"). It also sets up everything later slices need: the project files, GitHub repo, Vercel deploy, and secret key. If voice in the browser doesn't work for you, we find out before building anything on top of it.
+  PRD ref: `prd.md > Voice Conversation`, `prd.md > The Core Journey` (steps 4–5)
+  Spec ref: `spec.md > Where It Runs and How Someone Tries It`, `spec.md > Chat Helper`, `spec.md > Listening`, `spec.md > Speaking`, `spec.md > File Structure`, `spec.md > External Services and Dependencies`
+  Build: Create the project files (package.json with @anthropic-ai/sdk, .gitignore, base css/styles.css in the warm palette), `api/chat.js` calling Claude Haiku 5.5 with a short placeholder instruction, and a minimal `conversation.html` + `js/conversation.js` with a Start button, speech recognition (end of turn after ~2.5s of quiet), and speech synthesis. Learner creates the GitHub repo, the Anthropic key and the Vercel project; the agent pushes; Vercel deploys.
+  Verify (mechanical): `node --check` on all JS files; run `api/chat.js` locally against a stand-in Claude client to confirm it builds the right request and returns `{ reply }`; after deploy, `curl` POST to the live `/api/chat` returns a non-empty reply.
+  Learner check: Open your Vercel link in Chrome or Edge, press Start, allow the microphone, say "Hi, how are you today?", and hear a spoken answer. Then say one more thing and hear it answer again.
+  Commit: `Add spoken round trip with Claude on Vercel`
+
+- [ ] **2. The companion is tailored and holds back the stories it was told to wait for**
+  Becomes usable: Conversations use your full companion rules plus a fictionalized demo elder's answers. It uses their name, talks about their interests, speaks in short clear sentences, and does not bring up the "wait for them" stories until the elder does.
+  Why now: This is the unique kernel, so it comes as early as possible. It also tests the biggest open issue in the spec, whether Haiku reliably holds back. The early checkpoint follows, so your reactions can shape the remaining slices.
+  PRD ref: `prd.md > Tailored Companion`
+  Spec ref: `spec.md > Companion Instructions`, `spec.md > Chat Helper`, `spec.md > Decisions and Open Issues`
+  Build: Write `api/companion-instructions.js` with the core rules adapted from your GPT instructions (generalized, no references to your dad) and `buildInstructions(answers)`, including the "Know but do not mention first" section. Write the fictionalized demo elder answers with you. Have `api/chat.js` accept `answers`, and temporarily have the Conversation page send the demo answers.
+  Verify (mechanical): Run `buildInstructions` on the demo answers and on mostly blank answers, and confirm the right sections appear or are left out. Send scripted test conversations to the live `/api/chat`: an opener, a topic next to a held-back story (it must not mention the story), the elder raising the story (it should respond naturally), and an upsetting headline (calm, balanced). Read and judge each reply.
+  Learner check: Talk with the demo companion for a few minutes. Does it sound like the companion you wrote? Try steering near a held-back story without mentioning it, then bring the story up yourself.
+  Commit: `Add tailored companion instructions with hold-back rule`
+
+- [ ] **3. A family member can set it up from the Home page and questionnaire**
+  Becomes usable: The full journey. Home page with your welcome text, Get started, the 8-question page, submit, then the Conversation page using those answers instead of the built-in demo ones.
+  Why now: With the kernel proven, this adds the family half of the core journey, which is the setup the demo video shows first.
+  PRD ref: `prd.md > Home Page`, `prd.md > Family Questionnaire`, `prd.md > Screens and Layout`
+  Spec ref: `spec.md > Home Page`, `spec.md > Questionnaire Page`, `spec.md > Conversation Page`, `spec.md > Data Model`, `spec.md > Look and Feel`
+  Build: `index.html`, `questionnaire.html` and `js/questionnaire.js` saving to `sessionStorage` (`companionAnswers`, name required). The Conversation page reads the saved answers and shows a message linking back to the questionnaire if none exist. Remove the built-in demo answers from the page; they're kept as a test file.
+  Verify (mechanical): A headless-browser script (Playwright, already installed) loads Home, clicks Get started, fills the form, submits without a name (blocked), then with a name, and confirms it lands on the Conversation page with the answers in session storage. Opening the Conversation page directly with no answers shows the message.
+  Learner check: On your link, go from Home through the questionnaire using the demo elder's answers, then talk. Does the companion know who it's talking with?
+  Commit: `Add home page and family questionnaire`
+
+- [ ] **4. It feels like a calm, natural conversation for an elder**
+  Becomes usable: The glowing orb breathes while listening, dims while thinking, and pulses while speaking. A measured, natural-sounding voice. Long stories with pauses aren't cut off. "Bye" ends warmly, and a long silence gets "Are you still there?" then a goodbye. All pages have the warm, large-text look.
+  Why now: The core journey works, so now we make it feel right for the person using it. Doing this after the early checkpoint lets your feedback set the timing and feel.
+  PRD ref: `prd.md > Voice Conversation`, `prd.md > Ending a Conversation`, `prd.md > Look and Feel`
+  Spec ref: `spec.md > Orb States`, `spec.md > Speaking`, `spec.md > Listening`, `spec.md > Ending Rules`, `spec.md > Look and Feel`
+  Build: Orb states and animations (respecting reduced motion), voice selection (prefer "Natural" voices, rate ≈ 0.9), tuned end-of-turn timing, the `[END]` goodbye marker in the instructions and page, idle check-in and goodbye timers, and a polished stylesheet across all pages.
+  Verify (mechanical): `node --check`. A headless-browser script with a fake speech engine confirms the orb class changes listening → thinking → speaking → listening, that a reply ending in `[END]` is spoken without the marker and stops the conversation, and that the idle timers fire the check-in and then stop. Live `/api/chat` returns `[END]` after "Well, I'd better go. Bye!" Screenshots of each page are reviewed against Look and Feel.
+  Learner check: Have a real conversation. Tell a longer story with pauses, watch the orb, then say goodbye. In a second conversation, go quiet and wait for the check-in.
+  Commit: `Add orb states, natural pacing and conversation endings`
+
+- [ ] **5. It handles the what-ifs gracefully**
+  Becomes usable: If it doesn't catch what was said, it asks gently to repeat. A blocked microphone or unsupported browser shows a clear note for the family member. If Claude or the helper fails, the orb stops, a message appears, and it says it needs to stop. Distress handling and refusals give a calm fallback. The README explains how to try it.
+  Why now: The demo path works and feels right, so now we protect it from the realistic failures that could happen while recording or when a family tries it.
+  PRD ref: `prd.md > States and Boundaries`
+  Spec ref: `spec.md > Important Failure Modes`, `spec.md > Chat Helper`, `spec.md > External Services and Dependencies`
+  Build: Empty-turn handling, microphone-permission and browser-support messages, helper error responses (missing key, API error, refusal, oversized input) and their on-page handling, basic size limits in `api/chat.js`, and the README.
+  Verify (mechanical): Run `api/chat.js` locally with a failing stand-in client, a refusal, a missing key and oversized input, and confirm each returns the planned status and message. Headless-browser checks with the fake speech engine: a denied microphone shows the note, an empty turn triggers the gentle repeat, and a 500 from the helper shows the message and stops the orb.
+  Learner check: Block the microphone in the browser's site settings and press Start, then allow it again. During a conversation, mumble or stay quiet briefly and hear how it asks you to repeat.
+  Commit: `Handle microphone, recognition and helper failures`
+
+## Hands-on Checkpoints
+
+- [ ] Early usable behavior explored — after slice 2 (talking with the tailored demo companion on the live link); feedback shapes slices 3–5
+- [ ] Final kick-the-tires exploration and feedback completed
+
+## Final Review
+
+- [ ] Final review complete — feedback resolved and learner confirms ready to ship
+
+## Code Tour and App Map
+
+- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+
+Activity and evidence:
+Route and stops:
+Edit outcome:
+Reflection:
+Activity mode:
+
+## Revisions

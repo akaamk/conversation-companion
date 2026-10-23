@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conversation Companion PRD</title>
+<style>
+  :root {
+    --bg: #faf7f2; --surface: #ffffff; --text: #2b2622; --muted: #6b625a;
+    --line: #e4dcd1; --accent: #b4572e; --accent-soft: #f6e5db;
+    --ok: #2f7d5b; --ok-soft: #e0f1e8; --warn: #8a6d1d; --warn-soft: #f5edd3;
+    --no: #8b3a3a; --no-soft: #f5e0e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1916; --surface: #26221e; --text: #ede6dd; --muted: #a89d91;
+      --line: #3a342e; --accent: #e08a5f; --accent-soft: #3a2a20;
+      --ok: #6cc79c; --ok-soft: #1f3329; --warn: #d9b85a; --warn-soft: #352d17;
+      --no: #e08a8a; --no-soft: #3a2222;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1916; --surface: #26221e; --text: #ede6dd; --muted: #a89d91;
+    --line: #3a342e; --accent: #e08a5f; --accent-soft: #3a2a20;
+    --ok: #6cc79c; --ok-soft: #1f3329; --warn: #d9b85a; --warn-soft: #352d17;
+    --no: #e08a8a; --no-soft: #3a2222;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.6 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+  main { max-width: 780px; margin: 0 auto; padding: 40px 16px 80px; }
+  .eyebrow { font: 600 12px/1 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 2.1rem; line-height: 1.15; margin: 10px 0 12px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 10px; }
+  h3 { font-size: 1.05rem; margin: 0 0 8px; }
+  .lede { font-size: 1.12rem; color: var(--muted); margin: 0 0 8px; }
+  .status { display: inline-block; font: 600 12px/1 system-ui, sans-serif; padding: 6px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin: 12px 0; }
+  .expand { border-left: 4px solid var(--accent); }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { font-family: system-ui, sans-serif; fill: var(--text); }
+  .node { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; cursor: pointer; }
+  .node.on { stroke: var(--accent); stroke-width: 2.5; fill: var(--accent-soft); }
+  .arrow { stroke: var(--muted); stroke-width: 2; fill: none; }
+  .small { font-size: 12px; fill: var(--muted); }
+  .stepper { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+  .stepper button { font: 600 14px/1 system-ui, sans-serif; padding: 10px 14px; border-radius: 99px;
+    border: 1px solid var(--line); background: var(--surface); color: var(--text); cursor: pointer; }
+  .stepper button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .panel { display: none; }
+  .panel.on { display: block; }
+  .panel p { margin: 0 0 10px; }
+  ul.check { list-style: none; padding: 0; margin: 8px 0 0; }
+  ul.check li { padding-left: 26px; position: relative; margin: 6px 0; }
+  ul.check li::before { content: "☐"; position: absolute; left: 0; color: var(--accent); }
+  .kernel { background: var(--accent-soft); border-radius: 6px; padding: 1px 4px; }
+  ol.q { padding-left: 22px; margin: 6px 0 0; }
+  ol.q li { margin: 4px 0; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; margin: 10px 0; overflow: hidden; }
+  summary { cursor: pointer; padding: 14px 18px; font: 600 15px/1.3 system-ui, sans-serif; list-style: none; display: flex; gap: 10px; align-items: center; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 18px; }
+  details[open] summary::after { content: "–"; }
+  details > div { padding: 0 18px 16px; }
+  details ul { margin: 0; padding-left: 22px; }
+  details li { margin: 6px 0; }
+  .pill { font-size: 11px; padding: 4px 8px; border-radius: 99px; letter-spacing: .05em; text-transform: uppercase; }
+  .p-ok { background: var(--ok-soft); color: var(--ok); }
+  .p-warn { background: var(--warn-soft); color: var(--warn); }
+  .p-no { background: var(--no-soft); color: var(--no); }
+  .orb-demo { display: flex; gap: 24px; align-items: center; justify-content: center; padding: 10px 0; flex-wrap: wrap; }
+  .orb { width: 70px; height: 70px; border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, #ffe2c4, #e7a676 60%, #c97f4f); }
+  .orb.listen { animation: breathe 3s ease-in-out infinite; }
+  .orb.speak { animation: pulse .7s ease-in-out infinite; }
+  @keyframes breathe { 50% { transform: scale(1.08); opacity: .8; } }
+  @keyframes pulse { 50% { transform: scale(1.18); box-shadow: 0 0 24px #e7a676; } }
+  @media (prefers-reduced-motion: reduce) { .orb { animation: none !important; } }
+  .orb-label { text-align: center; font: 13px/1.3 system-ui, sans-serif; color: var(--muted); margin-top: 6px; }
+  footer { margin-top: 48px; font: 13px/1.5 system-ui, sans-serif; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">PRD · Build With AI: Basics</div>
+  <h1>Conversation Companion</h1>
+  <p class="lede">A family member answers eight questions, and the answers become a voice companion tailored to their elderly loved one.</p>
+  <span class="status">Status: approved</span>
+
+  <div class="card expand">
+    <strong>What got more specific:</strong> scope said “a short questionnaire” and “one voice conversation.” Now we know it's 8 named questions on one page, a big Start button, a glowing light for listening and speaking, and two ways a conversation ends.
+  </div>
+
+  <h2>The core journey</h2>
+  <p style="color:var(--muted);margin:0 0 8px;font:14px system-ui,sans-serif">Tap a screen in the diagram or use the buttons to see what happens there.</p>
+  <div class="card">
+    <svg viewBox="0 0 720 150" role="img" aria-label="Home, then Questionnaire, then Conversation">
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#8a7f74"/></marker></defs>
+      <g data-step="0"><rect class="node on" x="10" y="25" width="180" height="80" rx="12"/><text x="100" y="60" text-anchor="middle" font-size="16" font-weight="600">1 · Home</text><text x="100" y="82" text-anchor="middle" class="small">family member</text></g>
+      <g data-step="1"><rect class="node" x="270" y="25" width="180" height="80" rx="12"/><text x="360" y="60" text-anchor="middle" font-size="16" font-weight="600">2 · Questionnaire</text><text x="360" y="82" text-anchor="middle" class="small">8 questions, one page</text></g>
+      <g data-step="2"><rect class="node" x="530" y="25" width="180" height="80" rx="12"/><text x="620" y="60" text-anchor="middle" font-size="16" font-weight="600">3 · Conversation</text><text x="620" y="82" text-anchor="middle" class="small">elder talks &amp; listens</text></g>
+      <path class="arrow" d="M190 65 H264" marker-end="url(#ah)"/><text x="228" y="55" text-anchor="middle" class="small">Get started</text>
+      <path class="arrow" d="M450 65 H524" marker-end="url(#ah)"/><text x="488" y="55" text-anchor="middle" class="small">Submit</text>
+      <text x="620" y="135" text-anchor="middle" class="small">device handed to the elder</text>
+    </svg>
+    <div class="stepper" role="group" aria-label="Screens">
+      <button data-step="0" aria-pressed="true">Home</button>
+      <button data-step="1" aria-pressed="false">Questionnaire</button>
+      <button data-step="2" aria-pressed="false">Conversation</button>
+    </div>
+
+    <div class="panel on" data-panel="0">
+      <h3>Home</h3>
+      <p>“conversationcompanion” · <strong>A more personal kind of connection</strong> · <em>Every story deserves a listener.</em><br>
+      “Imagine a thoughtful conversation partner who knows what makes your loved one light up—ready to talk about their favorite subjects, listen to their stories, and keep curiosity alive.”</p>
+      <ul class="check">
+        <li>Shows the brand, headline, subhead, paragraph and a Get started button</li>
+        <li>Get started opens the questionnaire</li>
+      </ul>
+    </div>
+
+    <div class="panel" data-panel="1">
+      <h3>Family questionnaire</h3>
+      <ol class="q">
+        <li>What name do they prefer to be called?</li>
+        <li>About how old are they, and where did they grow up?</li>
+        <li>How would you describe their personality?</li>
+        <li>What subjects do they most enjoy talking about?</li>
+        <li>What work and life experiences are they proud of, and what stories do they love to tell?</li>
+        <li><span class="kernel">Which of those should the companion know about but wait for them to bring up first?</span></li>
+        <li>Do they have difficulty hearing or following conversation, and what helps?</li>
+        <li>Are there subjects that upset them, and how should the companion respond?</li>
+      </ol>
+      <ul class="check">
+        <li>All eight on one page, each with a free-text box</li>
+        <li>Only the preferred name is required (assumption)</li>
+        <li>Submitting moves to the Conversation screen</li>
+      </ul>
+    </div>
+
+    <div class="panel" data-panel="2">
+      <h3>Conversation</h3>
+      <p>Titled “Conversation Companion.” A big <strong>Start</strong> button, then a glowing light the elder can watch. Nothing to read.</p>
+      <div class="orb-demo">
+        <div><div class="orb listen"></div><div class="orb-label">listening</div></div>
+        <div><div class="orb speak"></div><div class="orb-label">speaking</div></div>
+      </div>
+      <ul class="check">
+        <li>Start begins it; the elder speaks first (“Hi!” / “Let's chat”)</li>
+        <li>Companion replies aloud, at a measured pace</li>
+        <li>The light visibly differs between listening and speaking</li>
+        <li>The elder can tell long stories without being cut off</li>
+        <li>“Bye” → warm goodbye and stop</li>
+        <li>Silence → “Are you still there?” → no answer → goodbye, back to Start</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>How the companion behaves</h2>
+  <div class="card">
+    <ul class="check" style="margin-top:0">
+      <li>Calls the elder by their preferred name</li>
+      <li>Brings up their favorite subjects when the conversation slows</li>
+      <li><span class="kernel">Never mentions the “wait for them” experiences until the elder raises them</span>, then responds naturally</li>
+      <li>Short, clear sentences; at most one question at a time; rephrases rather than repeats</li>
+      <li>Avoids upsetting subjects; responds calmly as the family described</li>
+      <li>Warm, curious, treats the elder as an adult; no memory quizzes; never pretends to be human</li>
+    </ul>
+  </div>
+
+  <h2>Look and feel</h2>
+  <div class="card">Warm, soft colors · large, easy-to-read, high-contrast text · calm and friendly · on the conversation screen, the moving light is the main visual.</div>
+
+  <h2>What-ifs</h2>
+  <details><summary><span class="pill p-warn">State</span> Didn't catch that</summary><div>Calmly asks them to say it again, in simple words, without pointing out hearing or memory problems.</div></details>
+  <details><summary><span class="pill p-warn">State</span> Microphone blocked</summary><div>Shows a clear message <em>for the family member</em> on how to allow it.</div></details>
+  <details><summary><span class="pill p-warn">State</span> Companion can't respond</summary><div>A calm message for the family member; the light stops, so the elder isn't left waiting in silence.</div></details>
+  <details><summary><span class="pill p-warn">State</span> Elder seems distressed</summary><div>Speaks calmly and suggests reaching out to a nearby caregiver or family member.</div></details>
+  <details><summary><span class="pill p-warn">State</span> Coming back later</summary><div>Nothing is saved for the demo; a new visit starts from Home.</div></details>
+
+  <h2>Building now vs. later</h2>
+  <details open><summary><span class="pill p-ok">Building</span> Proof of concept</summary><div><ul>
+    <li>Home page with the welcome text you wrote</li><li>One-page, 8-question questionnaire</li>
+    <li>Tailored companion from the answers plus your core rules</li><li>Big Start button and an animated light</li>
+    <li>Spoken back-and-forth conversation</li><li>Ending on goodbye or after silence</li><li>The what-if states above</li></ul></div></details>
+  <details><summary><span class="pill p-warn">Deferred</span> Not now, with reasons</summary><div><ul>
+    <li><strong>Voice-only start:</strong> needs an always-listening microphone</li>
+    <li><strong>Saved profiles:</strong> needs storage or accounts</li>
+    <li><strong>Family summary of the companion:</strong> nice for trust, not needed for the proof</li>
+    <li><strong>Full 50 questions:</strong> too long for the proof of concept</li></ul></div></details>
+  <details><summary><span class="pill p-no">Non-goals</span> Never in this project</summary><div><ul>
+    <li>Not a caregiver, therapist or medical tool</li><li>No memory between conversations</li>
+    <li>No accounts or public launch</li><li>No real identifying details about your dad</li><li>No memory quizzes</li></ul></div></details>
+
+  <h2>Open questions</h2>
+  <div class="card">
+    <ul style="margin:0;padding-left:20px">
+      <li>How long a silence before the check-in? Assumed 30–60 seconds, tuned during the build.</li>
+      <li>Which questions are required? Assumed only the name.</li>
+      <li>Speech recognition for older voices: a risk for the spec stage.</li>
+    </ul>
+  </div>
+
+  <footer>Companion to <code>devpost/prd.md</code>, which is the main copy.</footer>
+</main>
+<script>
+  (function () {
+    var buttons = document.querySelectorAll('.stepper button');
+    var nodes = document.querySelectorAll('svg g[data-step]');
+    var panels = document.querySelectorAll('.panel');
+    function show(i) {
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.step === String(i)); });
+      nodes.forEach(function (g) { g.querySelector('rect').classList.toggle('on', g.dataset.step === String(i)); });
+      panels.forEach(function (p) { p.classList.toggle('on', p.dataset.panel === String(i)); });
+    }
+    buttons.forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.step); }); });
+    nodes.forEach(function (g) { g.addEventListener('click', function () { show(g.dataset.step); }); });
+  })();
+</script>
+</body>
+</html>

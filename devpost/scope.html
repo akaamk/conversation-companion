@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Conversation Companion Scope</title>
+<style>
+  :root {
+    --bg: #faf7f2; --surface: #ffffff; --text: #2b2622; --muted: #6b625a;
+    --line: #e4dcd1; --accent: #b4572e; --accent-soft: #f6e5db;
+    --now: #2f7d5b; --now-soft: #e0f1e8; --later: #8a6d1d; --later-soft: #f5edd3;
+    --cut: #8b3a3a; --cut-soft: #f5e0e0;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #1c1916; --surface: #26221e; --text: #ede6dd; --muted: #a89d91;
+      --line: #3a342e; --accent: #e08a5f; --accent-soft: #3a2a20;
+      --now: #6cc79c; --now-soft: #1f3329; --later: #d9b85a; --later-soft: #352d17;
+      --cut: #e08a8a; --cut-soft: #3a2222;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #1c1916; --surface: #26221e; --text: #ede6dd; --muted: #a89d91;
+    --line: #3a342e; --accent: #e08a5f; --accent-soft: #3a2a20;
+    --now: #6cc79c; --now-soft: #1f3329; --later: #d9b85a; --later-soft: #352d17;
+    --cut: #e08a8a; --cut-soft: #3a2222;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.6 Georgia, "Iowan Old Style", "Palatino Linotype", serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 40px 16px 80px; }
+  .eyebrow { font: 600 12px/1 system-ui, sans-serif; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); }
+  h1 { font-size: 2.2rem; line-height: 1.15; margin: 10px 0 12px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 10px; }
+  .lede { font-size: 1.15rem; color: var(--muted); margin: 0 0 8px; }
+  .status { display: inline-block; font: 600 12px/1 system-ui, sans-serif;
+    padding: 6px 10px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    padding: 18px 20px; margin: 12px 0; }
+  .kernel { border-left: 4px solid var(--accent); }
+  blockquote { margin: 12px 0; padding: 4px 0 4px 16px; border-left: 3px solid var(--line);
+    color: var(--muted); font-style: italic; }
+  svg { width: 100%; height: auto; display: block; }
+  svg text { font-family: system-ui, sans-serif; fill: var(--text); }
+  .node { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+  .node.hl { stroke: var(--accent); stroke-width: 2; }
+  .arrow { stroke: var(--muted); stroke-width: 2; fill: none; }
+  .small { font-size: 12px; fill: var(--muted); }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .two { grid-template-columns: 1fr; } }
+  .who h3 { margin: 0 0 6px; font-size: 1rem; }
+  .who p { margin: 0; }
+  ol.demo { padding-left: 22px; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+    margin: 10px 0; overflow: hidden; }
+  summary { cursor: pointer; padding: 14px 18px; font: 600 15px/1.3 system-ui, sans-serif;
+    list-style: none; display: flex; align-items: center; gap: 10px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; margin-left: auto; color: var(--muted); font-size: 18px; }
+  details[open] summary::after { content: "–"; }
+  .pill { font-size: 11px; padding: 4px 8px; border-radius: 99px; letter-spacing: .05em; text-transform: uppercase; }
+  .now .pill { background: var(--now-soft); color: var(--now); }
+  .later .pill { background: var(--later-soft); color: var(--later); }
+  .cut .pill { background: var(--cut-soft); color: var(--cut); }
+  details ul { margin: 0; padding: 0 18px 16px 40px; }
+  details li { margin: 6px 0; }
+  .risk { background: var(--later-soft); border-color: transparent; }
+  footer { margin-top: 48px; font: 13px/1.5 system-ui, sans-serif; color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Scope · Build With AI: Basics</div>
+  <h1>The Conversation Companion</h1>
+  <p class="lede">A family answers a short questionnaire about their elderly loved one, and it becomes a voice companion tailored to that person.</p>
+  <span class="status">Status: approved</span>
+
+  <h2>How it fits together</h2>
+  <div class="card">
+    <svg viewBox="0 0 720 230" role="img" aria-label="Family fills questionnaire, which becomes companion instructions, which drive a voice conversation with the elder">
+      <defs>
+        <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" fill="currentColor" style="color: var(--muted)"/>
+        </marker>
+      </defs>
+      <rect class="node" x="10" y="40" width="150" height="80" rx="12"/>
+      <text x="85" y="74" text-anchor="middle" font-size="15" font-weight="600">Family member</text>
+      <text x="85" y="96" text-anchor="middle" class="small">answers once</text>
+
+      <rect class="node hl" x="195" y="40" width="150" height="80" rx="12"/>
+      <text x="270" y="74" text-anchor="middle" font-size="15" font-weight="600">Short</text>
+      <text x="270" y="94" text-anchor="middle" font-size="15" font-weight="600">questionnaire</text>
+
+      <rect class="node hl" x="380" y="40" width="150" height="80" rx="12"/>
+      <text x="455" y="74" text-anchor="middle" font-size="15" font-weight="600">Companion</text>
+      <text x="455" y="94" text-anchor="middle" font-size="15" font-weight="600">instructions</text>
+
+      <rect class="node" x="565" y="40" width="145" height="80" rx="12"/>
+      <text x="637" y="74" text-anchor="middle" font-size="15" font-weight="600">Elder</text>
+      <text x="637" y="96" text-anchor="middle" class="small">talks &amp; listens</text>
+
+      <path class="arrow" d="M160 80 H190" marker-end="url(#ah)"/>
+      <path class="arrow" d="M345 80 H375" marker-end="url(#ah)"/>
+      <path class="arrow" d="M530 80 H560" marker-end="url(#ah)"/>
+
+      <path class="arrow" d="M610 125 C 600 190, 500 190, 490 130" marker-end="url(#ah)"/>
+      <path class="arrow" d="M480 125 C 490 175, 600 175, 615 130" marker-end="url(#ah)" style="opacity:.45"/>
+      <text x="550" y="212" text-anchor="middle" class="small">spoken conversation loop — no typing, no reading</text>
+
+      <text x="270" y="150" text-anchor="middle" class="small">how to talk · what to discuss</text>
+      <text x="270" y="168" text-anchor="middle" class="small">what to avoid · what to hold back</text>
+    </svg>
+  </div>
+
+  <h2>The unique kernel</h2>
+  <div class="card kernel">
+    <p style="margin-top:0"><strong>Family questionnaire → tailored companion → voice conversation.</strong></p>
+    <p style="margin-bottom:0">The family's answers shape <em>how</em> the companion talks, <em>what</em> it talks about, what it avoids, and what it <strong>knows but holds back</strong>, so the elder stays the one who introduces their own stories. It's a conversation partner, never a caregiver, therapist, or memory test.</p>
+  </div>
+
+  <h2>Who it's for</h2>
+  <div class="two">
+    <div class="card who">
+      <h3>The elder</h3>
+      <p>Someone like a 98-year-old retired NYC police officer at home with aides. Hard of hearing, increasingly isolated, loves WWII and NYC history, police work, and classic movies. Shouldn't have to type or read.</p>
+    </div>
+    <div class="card who">
+      <h3>The family member</h3>
+      <p>An adult child who wants their parent to have engaging company. Today the alternatives are aides who may not talk much, relatives who rarely check in, or nothing.</p>
+    </div>
+  </div>
+
+  <h2>Why this matters</h2>
+  <blockquote>“He has no one to talk to which is isolating for him and has clearly increased signs of dementia.” It may be too late for him, so the aim is “providing it to others in similar situations.”</blockquote>
+
+  <h2>What “working” looks like</h2>
+  <div class="card">
+    <ol class="demo">
+      <li><strong>Setup overview:</strong> a family member fills out the short questionnaire for a demo elder, based on the learner's dad with identifying details changed.</li>
+      <li><strong>Conversation:</strong> that companion has a simple spoken conversation with the elder.</li>
+    </ol>
+    <p style="margin-bottom:0"><strong>The “oh, that works” moment:</strong> the companion responds to a story naturally, in short clear spoken sentences, without revealing background it was told to hold back. The family “should see that the elderly parent is being engaged… and the elderly person should be enjoying a conversation.”</p>
+  </div>
+
+  <h2>What's in, what waits</h2>
+  <details class="now" open>
+    <summary><span class="pill">Now</span> Proof of concept</summary>
+    <ul>
+      <li>A short questionnaire: a handful of the most important of the 50 questions</li>
+      <li>Answers turn into companion instructions modeled on the original GPT instructions</li>
+      <li>One voice conversation: the elder speaks and hears</li>
+      <li>One fictionalized demo elder profile</li>
+    </ul>
+  </details>
+  <details class="later">
+    <summary><span class="pill">Later</span> Worth doing, not now</summary>
+    <ul>
+      <li>The full 50-question questionnaire</li>
+      <li>Saved profiles for multiple families; family accounts</li>
+      <li>The elder adding or correcting information over time</li>
+      <li>Family feedback and “is it making a difference” questions</li>
+      <li>Smart speaker or dedicated device; multiple languages and voices</li>
+      <li>The AI movie-creation app (separate idea)</li>
+    </ul>
+  </details>
+  <details class="cut">
+    <summary><span class="pill">Cut</span> With reasons</summary>
+    <ul>
+      <li><strong>Accounts and a real launch:</strong> not needed to prove the idea, and adds privacy and security work</li>
+      <li><strong>Long-term memory across conversations:</strong> the questionnaire supplies background, and persistent memory raises privacy questions</li>
+      <li><strong>Real identifying details about the learner's dad:</strong> the demo is public</li>
+    </ul>
+  </details>
+
+  <h2>Open risk</h2>
+  <div class="card risk">
+    <p style="margin:0">Voice is central. Speech recognition can struggle with older or soft voices. The spec stage chooses the voice approach and whether the demo needs a fallback.</p>
+  </div>
+
+  <footer>Companion to <code>devpost/scope.md</code>, which is the main copy.</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,12 @@
+/devpost/learner-profile.md
+.env
+.env.*
+!.env.example
+node_modules/
+.vercel/
+# course material and local backups (not part of the app)
+/.agents/
+/.claude/
+/agent/
+/skills-lock.json
+/devpost-backup.zip

@@ -1,0 +1,64 @@
+/* Warm, soft colors with large, easy-to-read text (spec.md > Look and Feel). */
+:root {
+  --cream: #fbf6ee;
+  --ink: #3b2f2a;
+  --soft-ink: #6e5d54;
+  --terracotta: #c8693f;
+  --peach: #f3c9a8;
+  --sage: #8fa98f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  font-size: 20px;
+  line-height: 1.6;
+}
+
+main {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2.4rem;
+  line-height: 1.2;
+  margin: 0 0 24px;
+}
+
+/* The big round Start button on the Conversation page. */
+.start-button {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  border: none;
+  background: var(--terracotta);
+  color: #fff;
+  font-size: 2rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(200, 105, 63, 0.35);
+}
+
+.start-button:focus-visible {
+  outline: 4px solid var(--ink);
+  outline-offset: 6px;
+}
+
+.status {
+  margin-top: 32px;
+  color: var(--soft-ink);
+  min-height: 2em;
+}
+
+[hidden] {
+  display: none !important;
+}
