@@ -9,7 +9,7 @@ Build mode: learn
 
 ## Slices
 
-- [ ] **1. You speak and hear Claude answer aloud, on your own link**
+- [x] **1. You speak and hear Claude answer aloud, on your own link**
   Becomes usable: A live Vercel link with a Conversation page. Press Start, say something, and hear a reply from Claude Haiku 5.5 spoken back, using a simple placeholder companion. The loop repeats until you reload.
   Why now: Biggest risk first, and it settles your useful unknown ("voice companions aren't doable"). It also sets up everything later slices need: the project files, GitHub repo, Vercel deploy, and secret key. If voice in the browser doesn't work for you, we find out before building anything on top of it.
   PRD ref: `prd.md > Voice Conversation`, `prd.md > The Core Journey` (steps 4–5)
@@ -81,3 +81,6 @@ Reflection:
 Activity mode:
 
 ## Revisions
+- Slice 1 live check done by the learner instead of `curl` — this cloud environment's network policy blocks the agent from reaching `conversation-companion-sand.vercel.app`; the learner confirmed spoken replies on the live link.
+- Ignore speech results that arrive after listening stops — the first live test showed one sentence producing several replies (reproduced headlessly: 3 requests for 1 sentence; fixed: 1).
+
