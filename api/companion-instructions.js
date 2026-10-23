@@ -57,7 +57,7 @@ export function buildInstructions(answers = {}) {
 
   const about = [];
   if (name) {
-    about.push(`They like to be called ${name}. Use their name rarely, perhaps once when greeting them, and always inside a sentence the way a friend would ("Well, ${name}, that sounds like quite a day"). Never tack it on at the start or end of a sentence by itself.`);
+    about.push(`They like to be called ${name}. Use the name only once, in your first greeting. After that, do not use it at all: friends rarely say each other's names in conversation, and a name tacked on at the end of a sentence sounds odd when spoken aloud.`);
   }
   for (const [key, label] of ABOUT_FIELDS) {
     const value = clean(answers[key]);

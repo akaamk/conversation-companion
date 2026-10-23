@@ -19,14 +19,19 @@ const UNFINISHED_ENDINGS = [
 // been sound and no new words for this long, it's probably a TV or room noise.
 const SOUND_WITHOUT_WORDS_MS = 6000;
 
+// Testing switches in the address: &rate=1 sets the speaking pace, &meter=off
+// turns off the sound meter (to compare how the voice sounds without it).
+const params = new URLSearchParams(location.search);
+
 // Speaking pace: a little slower than normal (1 is normal).
-const SPEAKING_RATE = 0.9;
+const SPEAKING_RATE = Number(params.get("rate")) || 0.9;
 
 const startButton = document.getElementById("start");
 const statusText = document.getElementById("status");
 const debugLine = document.getElementById("debug");
 const interruptHint = document.getElementById("interrupt-hint");
 const debugMode = new URLSearchParams(location.search).has("debug");
+const elderName = (typeof DEMO_ANSWERS !== "undefined" && DEMO_ANSWERS.name) || "";
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -95,9 +100,13 @@ let lastSound = 0;      // when the elder was last heard making sound
 // Ask for the microphone a second time, just to measure loudness. Speech
 // recognition doesn't tell us about sounds it can't turn into words.
 async function startSoundMeter() {
-  if (soundLevel || !navigator.mediaDevices?.getUserMedia) return;
+  if (soundLevel || !navigator.mediaDevices?.getUserMedia || params.get("meter") === "off") return;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Turning off call-style processing keeps Windows from switching the
+    // speakers or headphones into a lower-quality "phone call" mode.
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    });
     const audio = new AudioContext();
     const analyser = audio.createAnalyser();
     analyser.fftSize = 1024;
@@ -291,7 +300,7 @@ function showTimings() {
       `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
       `Total: ${seconds(timings.lastWord, timings.voiceStart)} · ` +
       `Listening restarts: ${timings.micRestarts} · Sound meter: ${soundLevel ? "on" : "off"}\n` +
-      `Voice: ${timings.voiceName || "browser default"}${voiceNote}`
+      `Voice: ${timings.voiceName || "browser default"} at speed ${SPEAKING_RATE}${voiceNote}`
   );
 }
 
@@ -308,9 +317,20 @@ function localVoice() {
   return voices.find((v) => v.localService && v.lang === "en-US") || voices.find((v) => v.localService) || null;
 }
 
+// Removes the elder's name where it's tacked on: "That's grand, George." becomes
+// "That's grand." and a lone "George." disappears. A name inside a sentence stays.
+function withoutTackedOnName(text) {
+  if (!elderName) return text;
+  const name = elderName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return text
+    .replace(new RegExp(`(^|[.!?]\\s+)${name}([.!?])\\s*`, "g"), "$1")
+    .replace(new RegExp(`,\\s*${name}([.!?])`, "g"), "$1");
+}
+
 // Collects the reply as it streams in and speaks each sentence as soon as
 // it is complete. When the last sentence has been spoken, listening resumes.
 function sentenceSpeaker(thisTurn) {
+  let rawReply = "";   // everything Claude wrote, for the testing line
   let pending = "";    // text not yet complete enough to speak
   let spoken = "";     // what the elder has actually heard so far
   const waiting = [];  // sentences handed to the voice but not yet finished
@@ -334,6 +354,7 @@ function sentenceSpeaker(thisTurn) {
   }
 
   function say(sentence) {
+    sentence = withoutTackedOnName(sentence);
     if (!sentence.trim()) return;
     if (!speaking) {
       speaking = true;
@@ -426,6 +447,9 @@ function sentenceSpeaker(thisTurn) {
   function maybeDone() {
     if (finished && waiting.length === 0 && thisTurn === turnId) {
       clearInterval(watchdog);
+      if (debugMode && rawReply.trim()) {
+        debugLine.textContent += `\nClaude wrote: "${rawReply.trim()}"`;
+      }
       history.push({ role: "assistant", content: spoken.trim() || pending.trim() || "…" });
       startListening();
     }
@@ -454,6 +478,7 @@ function sentenceSpeaker(thisTurn) {
 
   return {
     add(text) {
+      rawReply += text;
       pending += text;
       flush();
     },
