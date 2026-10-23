@@ -19,7 +19,17 @@ Build mode: learn
   Learner check: Open your Vercel link in Chrome or Edge, press Start, allow the microphone, say "Hi, how are you today?", and hear a spoken answer. Then say one more thing and hear it answer again.
   Commit: `Add spoken round trip with Claude on Vercel`
 
-- [ ] **2. The companion is tailored and holds back the stories it was told to wait for**
+- [ ] **2. The voice sounds natural, answers sooner, and can be interrupted**
+  Becomes usable: The companion speaks with the most natural voice the browser offers (Edge's "Natural" voices), starts speaking its first sentence while the rest is still being written, waits 2 seconds of quiet before answering, and stops talking and listens when you tap the screen. A hidden testing line (add `?debug` to the address) shows what the browser heard and how long each part took.
+  Why now: The learner's first live test found the voice robotic, the delay noticeable, and no way to interrupt. All three affect whether the companion's personality can be judged in the next slice, so the voice gets fixed first. Pulled forward from slice 5 (natural voice, tap-to-interrupt) and from the spec's planned streaming upgrade.
+  PRD ref: `prd.md > Voice Conversation`
+  Spec ref: `spec.md > Listening`, `spec.md > Speaking`, `spec.md > Chat Helper`, `spec.md > External Services and Dependencies`
+  Build: Voice selection (prefer en-US voices with "Natural" in the name, rate ≈ 0.9). `END_OF_TURN_MS` = 2000. `api/chat.js` streams Claude's reply text as it's written, and the page speaks each sentence as soon as it's complete. Tap anywhere while speaking cancels speech and the in-flight reply and resumes listening. A `?debug` line shows the heard text and timings.
+  Verify (mechanical): `node --check`. Run `api/chat.js` locally with a stand-in streaming client and confirm the chunks are written in order and a refusal gives the fallback line. Headless-browser tests with the fake speech engine and a slow streamed reply confirm the first sentence is spoken before the reply finishes, one sentence gets one reply, a tap while speaking cancels speech and resumes listening without extra replies, and `?debug` shows the heard text.
+  Learner check: In Edge, reload the conversation page with `?debug` at the end of the address. Have a short conversation: does the voice sound better, and does the reply start sooner? Tap the screen while it's talking and check it stops and listens. Read the testing line to see what it heard.
+  Commit: `Natural voice, streamed replies and tap to interrupt`
+
+- [ ] **3. The companion is tailored and holds back the stories it was told to wait for**
   Becomes usable: Conversations use your full companion rules plus a fictionalized demo elder's answers. It uses their name, talks about their interests, speaks in short clear sentences, and does not bring up the "wait for them" stories until the elder does.
   Why now: This is the unique kernel, so it comes as early as possible. It also tests the biggest open issue in the spec, whether Haiku reliably holds back. The early checkpoint follows, so your reactions can shape the remaining slices.
   PRD ref: `prd.md > Tailored Companion`
@@ -29,7 +39,7 @@ Build mode: learn
   Learner check: Talk with the demo companion for a few minutes. Does it sound like the companion you wrote? Try steering near a held-back story without mentioning it, then bring the story up yourself.
   Commit: `Add tailored companion instructions with hold-back rule`
 
-- [ ] **3. A family member can set it up from the Home page and questionnaire**
+- [ ] **4. A family member can set it up from the Home page and questionnaire**
   Becomes usable: The full journey. Home page with your welcome text, Get started, the 8-question page, submit, then the Conversation page using those answers instead of the built-in demo ones.
   Why now: With the kernel proven, this adds the family half of the core journey, which is the setup the demo video shows first.
   PRD ref: `prd.md > Home Page`, `prd.md > Family Questionnaire`, `prd.md > Screens and Layout`
@@ -39,17 +49,17 @@ Build mode: learn
   Learner check: On your link, go from Home through the questionnaire using the demo elder's answers, then talk. Does the companion know who it's talking with?
   Commit: `Add home page and family questionnaire`
 
-- [ ] **4. It feels like a calm, natural conversation for an elder**
-  Becomes usable: The glowing orb breathes while listening, dims while thinking, and pulses while speaking. A measured, natural-sounding voice. Long stories with pauses aren't cut off. "Bye" ends warmly, and a long silence gets "Are you still there?" then a goodbye. All pages have the warm, large-text look.
+- [ ] **5. It feels like a calm, natural conversation for an elder**
+  Becomes usable: The glowing orb breathes while listening, dims while thinking, and pulses while speaking. Long stories with pauses aren't cut off. "Bye" ends warmly, and a long silence gets "Are you still there?" then a goodbye. All pages have the warm, large-text look.
   Why now: The core journey works, so now we make it feel right for the person using it. Doing this after the early checkpoint lets your feedback set the timing and feel.
   PRD ref: `prd.md > Voice Conversation`, `prd.md > Ending a Conversation`, `prd.md > Look and Feel`
   Spec ref: `spec.md > Orb States`, `spec.md > Speaking`, `spec.md > Listening`, `spec.md > Ending Rules`, `spec.md > Look and Feel`
-  Build: Orb states and animations (respecting reduced motion), voice selection (prefer "Natural" voices, rate ≈ 0.9), tuned end-of-turn timing, tap-anywhere to interrupt while speaking, the `[END]` goodbye marker in the instructions and page, idle check-in and goodbye timers, and a polished stylesheet across all pages.
-  Verify (mechanical): `node --check`. A headless-browser script with a fake speech engine confirms the orb class changes listening → thinking → speaking → listening, that a tap while speaking cancels speech and resumes listening, that a reply ending in `[END]` is spoken without the marker and stops the conversation, and that the idle timers fire the check-in and then stop. Live `/api/chat` returns `[END]` after "Well, I'd better go. Bye!" Screenshots of each page are reviewed against Look and Feel.
-  Learner check: Have a real conversation. Tell a longer story with pauses, watch the orb, tap the screen to interrupt a reply, then say goodbye. In a second conversation, go quiet and wait for the check-in.
+  Build: Orb states and animations (respecting reduced motion), the `[END]` goodbye marker in the instructions and page, idle check-in and goodbye timers, and a polished stylesheet across all pages.
+  Verify (mechanical): `node --check`. A headless-browser script with a fake speech engine confirms the orb class changes listening → thinking → speaking → listening, that a reply ending in `[END]` is spoken without the marker and stops the conversation, and that the idle timers fire the check-in and then stop. Live `/api/chat` returns `[END]` after "Well, I'd better go. Bye!" Screenshots of each page are reviewed against Look and Feel.
+  Learner check: Have a real conversation. Tell a longer story with pauses, watch the orb, then say goodbye. In a second conversation, go quiet and wait for the check-in.
   Commit: `Add orb states, natural pacing and conversation endings`
 
-- [ ] **5. It handles the what-ifs gracefully**
+- [ ] **6. It handles the what-ifs gracefully**
   Becomes usable: If it doesn't catch what was said, it asks gently to repeat. A blocked microphone or unsupported browser shows a clear note for the family member. If Claude or the helper fails, the orb stops, a message appears, and it says it needs to stop. Distress handling and refusals give a calm fallback. The README explains how to try it.
   Why now: The demo path works and feels right, so now we protect it from the realistic failures that could happen while recording or when a family tries it.
   PRD ref: `prd.md > States and Boundaries`
@@ -61,7 +71,7 @@ Build mode: learn
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 2 (talking with the tailored demo companion on the live link); feedback shapes slices 3–5
+- [ ] Early usable behavior explored — after slice 3 (talking with the tailored demo companion on the live link); feedback shapes slices 4–6
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -83,4 +93,5 @@ Activity mode:
 ## Revisions
 - Slice 1 live check done by the learner instead of `curl` — this cloud environment's network policy blocks the agent from reaching `conversation-companion-sand.vercel.app`; the learner confirmed spoken replies on the live link.
 - Ignore speech results that arrive after listening stops — the first live test showed one sentence producing several replies (reproduced headlessly: 3 requests for 1 sentence; fixed: 1).
-- Added tap-to-interrupt to slice 4 (`prd.md > Voice Conversation`, `spec.md > Speaking`) — the learner found they couldn't interrupt during the first live test and chose tap over voice interruption, which would need a real-time voice model.
+- Added tap-to-interrupt to slice 4 (now slice 2) (`prd.md > Voice Conversation`, `spec.md > Speaking`) — the learner found they couldn't interrupt during the first live test and chose tap over voice interruption, which would need a real-time voice model.
+- Inserted new slice 2 (natural voice, streamed replies, tap to interrupt, `?debug` line; 2-second pause) and renumbered the rest — after the live test the learner found the voice robotic and the delay noticeable, and asked to fix the voice before judging the companion. Moved voice selection and tap-to-interrupt out of the orb/pacing slice; the spec's "streaming later if slow" became now.

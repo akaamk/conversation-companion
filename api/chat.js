@@ -1,22 +1,26 @@
 // The chat helper: a Vercel serverless function at POST /api/chat.
 // It is the only part of the app that holds the secret Anthropic key.
-// The page sends { answers, history }; we send back { reply }.
+// The page sends { answers, history }; we stream the reply back as plain
+// text while Claude writes it, so the page can start speaking early.
 
 import Anthropic from "@anthropic-ai/sdk";
 
 export const MODEL = "claude-haiku-5-5";
 
-// Placeholder companion for slice 1. Slice 2 replaces this with the
+// Placeholder companion for slices 1–2. Slice 3 replaces this with the
 // full rules built from the family's questionnaire answers.
 const PLACEHOLDER_INSTRUCTIONS = `You are a warm, friendly conversation companion for an older adult.
 Your replies are spoken aloud, so keep them to two or three short, clear sentences.
 Use plain words. Do not use lists, symbols, or emoji.
 Ask at most one question at a time.`;
 
-// Builds the request for Claude and returns the reply text.
-// `client` is passed in so it can be swapped for a stand-in during testing.
-export async function getReply({ history }, client) {
-  const response = await client.messages.create({
+export const REFUSAL_REPLY = "Let's talk about something else. What's been on your mind today?";
+
+// Asks Claude for a reply and passes each piece of text to `onText` as it
+// arrives. Returns the whole reply. `client` is passed in so it can be
+// swapped for a stand-in during testing.
+export async function streamReply({ history }, client, onText) {
+  const stream = client.messages.stream({
     model: MODEL,
     max_tokens: 1024,
     system: PLACEHOLDER_INSTRUCTIONS,
@@ -24,13 +28,20 @@ export async function getReply({ history }, client) {
     output_config: { effort: "low" },
   });
 
-  const text = response.content
-    .filter((block) => block.type === "text")
-    .map((block) => block.text)
-    .join(" ")
-    .trim();
+  let reply = "";
+  for await (const event of stream) {
+    if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+      reply += event.delta.text;
+      onText(event.delta.text);
+    }
+  }
 
-  return text;
+  const message = await stream.finalMessage();
+  if (message.stop_reason === "refusal" && reply.trim() === "") {
+    reply = REFUSAL_REPLY;
+    onText(REFUSAL_REPLY);
+  }
+  return reply;
 }
 
 let client;
@@ -47,12 +58,26 @@ export default async function handler(req, res) {
     return;
   }
 
+  let started = false;
   try {
     client ??= new Anthropic();
-    const reply = await getReply({ history }, client);
-    res.status(200).json({ reply });
+    await streamReply({ history }, client, (text) => {
+      if (!started) {
+        res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" });
+        started = true;
+      }
+      res.write(text);
+    });
+    if (!started) {
+      res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8" });
+    }
+    res.end();
   } catch (error) {
     console.error("Chat helper failed:", error);
-    res.status(500).json({ error: "The companion couldn't respond." });
+    if (started) {
+      res.end(); // the page notices the reply stopped short
+    } else {
+      res.status(500).json({ error: "The companion couldn't respond." });
+    }
   }
 }

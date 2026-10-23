@@ -93,11 +93,12 @@ PRD ref: `prd.md > Family Questionnaire`.
 PRD ref: `prd.md > Voice Conversation`, `prd.md > Screens and Layout`.
 
 #### Listening
-Uses `webkitSpeechRecognition` with `continuous = true`, `interimResults = true`, `lang = "en-US"`. The page itself decides when the elder has *finished* a turn: after **~2.5 seconds** with no new words (tunable constant `END_OF_TURN_MS`), so a pause mid-story doesn't cut them off. Recognition is paused while the companion speaks so it doesn't hear itself.
+Uses `webkitSpeechRecognition` with `continuous = true`, `interimResults = true`, `lang = "en-US"`. The page itself decides when the elder has *finished* a turn: after **2 seconds** with no new words (learner's choice after the first live test) (tunable constant `END_OF_TURN_MS`), so a pause mid-story doesn't cut them off. Recognition is paused while the companion speaks so it doesn't hear itself.
 PRD ref: `prd.md > Voice Conversation` ("can talk at length without being cut off").
 
 #### Speaking
-`speechSynthesis` with a preferred English voice (prefer names containing "Natural" on Edge), `rate ≈ 0.9` for a measured pace. Text is spoken sentence by sentence; when the last sentence ends, listening resumes.
+`speechSynthesis` with a preferred English voice (prefer en-US names containing "Natural" on Edge), `rate ≈ 0.9` for a measured pace. The reply arrives in pieces as Claude writes it (see `Chat Helper`); each sentence is spoken as soon as it's complete, and when the last one ends, listening resumes.
+**Testing line:** adding `?debug` to the page address shows what the browser heard and how long each part took (pause, first words, full reply). Hidden otherwise.
 **Tap to interrupt:** a tap or click anywhere on the page while speaking calls `speechSynthesis.cancel()` and starts listening immediately (the microphone stays off while speaking, so the companion can't hear itself).
 PRD ref: `prd.md > Voice Conversation`.
 
@@ -117,7 +118,7 @@ PRD ref: `prd.md > Ending a Conversation`.
 - Checks basic limits (answers and history not absurdly long; history trimmed to the most recent ~40 turns).
 - Builds the system prompt with `buildInstructions(answers)` from `api/companion-instructions.js`.
 - Calls Claude via `@anthropic-ai/sdk` (see `External Services and Dependencies`).
-- Returns `{ reply }`, or `{ error }` with a status code if something fails.
+- **Streams** the reply back as plain text as Claude writes it (`client.messages.stream`), so the page can start speaking the first sentence early. Returns `{ error }` JSON with a status code if something fails before streaming starts.
 PRD ref: `prd.md > Tailored Companion`.
 
 ### Companion Instructions
@@ -161,10 +162,10 @@ conversation-companion/            # the GitHub repo (this folder)
 ## External Services and Dependencies
 
 ### Anthropic API (Claude)
-- **Call:** `client.messages.create({ model: "claude-haiku-5-5", max_tokens: 1024, system: <instructions>, messages: <history>, output_config: { effort: "low" } })` using the official SDK (`new Anthropic()` reads `ANTHROPIC_API_KEY` automatically).
+- **Call:** `client.messages.stream({ model: "claude-haiku-5-5", max_tokens: 1024, system: <instructions>, messages: <history>, output_config: { effort: "low" } })` using the official SDK (`new Anthropic()` reads `ANTHROPIC_API_KEY` automatically).
   - `effort: "low"` keeps replies quick — recommended for chat.
   - Replies are short by instruction (a few spoken sentences).
-- **Response:** read the text from `response.content` (the `text` blocks). Check `response.stop_reason` first: if it's `"refusal"`, return a gentle fallback line instead.
+- **Response:** forward each `text_delta` to the page as it arrives. At the end, check the final message's `stop_reason`: if it's `"refusal"` and nothing was sent, send a gentle fallback line instead.
 - **Auth:** `ANTHROPIC_API_KEY` (Vercel environment variable).
 - **Cost:** Claude Haiku 5.5 is $0.10 per million input tokens and $0.50 per million output tokens (prompts under 100K tokens) — a typical conversation should cost about a cent or two. Prepaid credit; **set a monthly spend limit in the Console** because the link is public.
 - **Docs:** [Messages API](https://docs.anthropic.com/en/api/messages), [SDK](https://github.com/anthropics/anthropic-sdk-typescript), [Console](https://console.anthropic.com).
@@ -181,12 +182,11 @@ conversation-companion/            # the GitHub repo (this folder)
 - **Speech recognition mishears or hears nothing** (soft or older voice, background noise) → if a turn comes back empty, the companion says gently, "I didn't quite catch that. Could you say it again?" without mentioning hearing. (`prd.md > States and Boundaries` → Didn't catch that.)
 - **Microphone blocked or unsupported browser** → a clear on-screen message for the family member: how to allow the microphone, or "please open this in Chrome or Edge." (→ Microphone not allowed.)
 - **Helper or Claude fails** (no credit, network, key missing) → orb stops, an on-screen message for the family member ("The companion couldn't respond. Please check the connection and press Start again."), and a short spoken "I'm sorry, I need to stop for now." (→ Companion unavailable.)
-- **Slow reply** → the orb's *thinking* state shows it's working; if waits feel long in testing, add sentence-by-sentence streaming (see Decisions).
+- **Slow reply** → replies are streamed and spoken sentence by sentence; the orb's *thinking* state shows it's working.
 
 ## What Was Simplified and Why
 - **Browser speech + text model** instead of a real-time voice model — simpler and cheaper; the fuller version would need a voice-model API, a live audio connection, and short-lived tokens.
 - **Session storage** instead of saved profiles — the demo works in one visit; the fuller version would need a database and family accounts.
-- **Whole replies, not streamed** at first — simplest to build; streaming (speaking the first sentence while the rest is written) is a known upgrade if replies feel slow.
 - **Fixed timing constants** (2.5s end-of-turn, 45s check-in, 20s goodbye) instead of adaptive timing — easy to tune during testing.
 - **No usage limits beyond the Console spend cap and basic size checks** — fine for a demo link; a public launch would need rate limiting.
 

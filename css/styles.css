@@ -59,6 +59,13 @@ h1 {
   min-height: 2em;
 }
 
+.debug {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--soft-ink);
+  font-family: Consolas, monospace;
+}
+
 [hidden] {
   display: none !important;
 }
