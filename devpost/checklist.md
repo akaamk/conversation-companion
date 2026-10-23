@@ -81,15 +81,15 @@ Build mode: learn
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
 - [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
-- [ ] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
+- [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
-Activity and evidence:
-Route and stops:
-Edit outcome:
-Reflection:
-Activity mode:
+Activity and evidence: Guided route (static walkthrough on GitHub) following the kernel: question 6 → saved → sent each turn → built into the hold-back rules. Practice connected: "measure before you fix" (the learner's `?debug` timing numbers drove the pause decision; Edge's 1.0 confidence ruled out one mumbling fix).
+Route and stops: `js/questionnaire.js` (`sessionStorage.setItem`), `js/conversation.js` (`JSON.stringify({ answers, history })`), `api/companion-instructions.js` (`HOLD_BACK_RULE`, `buildInstructions`). Route sent; the learner left for the evening before replying, so whether they opened each stop isn't confirmed.
+Edit outcome: offered (`FINAL_GOODBYE` wording); no answer yet — the learner left for the evening.
+Reflection: offered; no answer yet.
+Activity mode: explicit static fallback (code viewed on GitHub; the app runs only on Vercel).
 
 ## Revisions
 - Slice 1 live check done by the learner instead of `curl` — this cloud environment's network policy blocks the agent from reaching `conversation-companion-sand.vercel.app`; the learner confirmed spoken replies on the live link.
