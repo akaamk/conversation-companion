@@ -3,7 +3,7 @@
 
 // How long a quiet pause must last before we decide the elder has finished
 // speaking. Longer means fewer interruptions mid-story.
-const END_OF_TURN_MS = 2000;
+const END_OF_TURN_MS = 1500;
 
 // Speaking pace: a little slower than normal (1 is normal).
 const SPEAKING_RATE = 0.9;
@@ -11,6 +11,7 @@ const SPEAKING_RATE = 0.9;
 const startButton = document.getElementById("start");
 const statusText = document.getElementById("status");
 const debugLine = document.getElementById("debug");
+const interruptHint = document.getElementById("interrupt-hint");
 const debugMode = new URLSearchParams(location.search).has("debug");
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -27,6 +28,7 @@ let replyRequest = null; // lets a tap cancel the reply that is still arriving
 let voice = null;
 let currentSpeaker = null; // speaks the reply for the current turn
 let timings = {};
+let voiceNote = ""; // for the testing line: set when the voice had to be switched
 
 function setStatus(message) {
   statusText.textContent = message;
@@ -74,6 +76,7 @@ function startListening() {
   heardText = "";
   listening = true;
   speaking = false;
+  interruptHint.hidden = true;
   setStatus("Listening…");
   if (stopping) {
     return; // the microphone restarts once the old session has fully ended
@@ -196,47 +199,129 @@ function showTimings() {
       `Claude's first words: ${seconds(timings.sent, timings.firstText)} · ` +
       `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
       `Total: ${seconds(timings.lastWord, timings.voiceStart)}\n` +
-      `Voice: ${voice ? voice.name : "browser default"}`
+      `Voice: ${voice ? voice.name : "browser default"}${voiceNote}`
   );
+}
+
+// If a sentence hasn't started playing after this long, the voice is stuck.
+const VOICE_STUCK_MS = 5000;
+
+// Browsers can forget an utterance that is still waiting to play, and then
+// never report that it finished. Holding on to each one prevents that.
+const activeUtterances = new Set();
+
+// A voice that runs on the computer itself, for when an online voice fails.
+function localVoice() {
+  const voices = speechSynthesis.getVoices().filter((v) => v.lang.startsWith("en"));
+  return voices.find((v) => v.localService && v.lang === "en-US") || voices.find((v) => v.localService) || null;
 }
 
 // Collects the reply as it streams in and speaks each sentence as soon as
 // it is complete. When the last sentence has been spoken, listening resumes.
 function sentenceSpeaker(thisTurn) {
-  let pending = "";   // text not yet spoken
-  let spoken = "";    // what the elder has actually heard so far
-  let queued = 0;     // sentences waiting to be spoken
+  let pending = "";    // text not yet complete enough to speak
+  let spoken = "";     // what the elder has actually heard so far
+  const waiting = [];  // sentences handed to the voice but not yet finished
   let finished = false;
+  let attempt = 0;     // goes up if the voice gets stuck and we start over
+  let retried = false;
+  let playing = false; // a sentence is being heard right now
+  let lastVoiceActivity = 0;
+  let watchdog = null;
+
+  // Every second, check for sentences waiting while nothing has played for a while.
+  function watchVoice() {
+    clearInterval(watchdog);
+    watchdog = setInterval(() => {
+      if (thisTurn !== turnId || (finished && waiting.length === 0)) {
+        clearInterval(watchdog);
+      } else if (waiting.length > 0 && !playing && performance.now() - lastVoiceActivity > VOICE_STUCK_MS) {
+        recoverFromStuckVoice();
+      }
+    }, 1000);
+  }
 
   function say(sentence) {
     if (!sentence.trim()) return;
     if (!speaking) {
       speaking = true;
       setStatus("Speaking…");
+      interruptHint.hidden = false;
     }
-    queued++;
+    if (waiting.length === 0) {
+      lastVoiceActivity = performance.now();
+    }
+    waiting.push(sentence);
+    play(sentence);
+    if (!watchdog) watchVoice();
+  }
+
+  function play(sentence) {
+    const thisAttempt = attempt;
     const utterance = new SpeechSynthesisUtterance(sentence.trim());
     utterance.lang = "en-US";
     utterance.rate = SPEAKING_RATE;
     if (voice) utterance.voice = voice;
+    activeUtterances.add(utterance);
+
     utterance.onstart = () => {
-      if (thisTurn !== turnId) return;
+      if (thisTurn !== turnId || thisAttempt !== attempt) return;
+      playing = true;
+      lastVoiceActivity = performance.now();
       spoken += sentence;
       if (timings.voiceStart === undefined) {
         timings.voiceStart = performance.now();
         showTimings();
       }
     };
+    // A voice failure (not one we caused by cancelling) means trying another voice.
+    utterance.onerror = (event) => {
+      if (event && (event.error === "interrupted" || event.error === "canceled")) {
+        utterance.onend();
+      } else if (thisTurn === turnId && thisAttempt === attempt) {
+        activeUtterances.delete(utterance);
+        recoverFromStuckVoice();
+      }
+    };
     utterance.onend = () => {
-      queued--;
+      activeUtterances.delete(utterance);
+      if (thisTurn !== turnId || thisAttempt !== attempt) return;
+      playing = false;
+      lastVoiceActivity = performance.now();
+      waiting.shift();
       maybeDone();
     };
     speechSynthesis.speak(utterance);
   }
 
+  // Start over with a voice that runs on the computer itself. If that also
+  // gets stuck, give up on this reply and go back to listening.
+  function recoverFromStuckVoice() {
+    attempt++;
+    playing = false;
+    lastVoiceActivity = performance.now();
+    speechSynthesis.cancel();
+    const unspoken = waiting.splice(0);
+    voiceNote = retried ? " (the voice didn't play again; skipped a reply)" : " (the online voice didn't play; switched to this one)";
+    showDebug(voiceNote);
+    if (retried) {
+      finished = true;
+      maybeDone();
+      return;
+    }
+    retried = true;
+    voice = localVoice() || voice;
+    for (const sentence of unspoken) {
+      waiting.push(sentence);
+      play(sentence);
+    }
+    maybeDone();
+  }
+
   function maybeDone() {
-    if (finished && queued === 0 && thisTurn === turnId) {
-      history.push({ role: "assistant", content: spoken.trim() || pending.trim() });
+    if (finished && waiting.length === 0 && thisTurn === turnId) {
+      clearInterval(watchdog);
+      history.push({ role: "assistant", content: spoken.trim() || pending.trim() || "…" });
       startListening();
     }
   }
@@ -257,7 +342,7 @@ function sentenceSpeaker(thisTurn) {
         say(pending);
         pending = "";
       }
-      if (queued === 0 && !speaking) {
+      if (waiting.length === 0 && !speaking) {
         // Nothing came back at all.
         setStatus("The companion couldn't respond.");
         startButton.hidden = false;
@@ -274,7 +359,9 @@ function sentenceSpeaker(thisTurn) {
 // ---- Tap to interrupt ----
 
 document.addEventListener("click", (event) => {
-  if (!speaking || event.target === startButton) {
+  // Selecting text (for example, copying the testing line) is not a tap.
+  const selectingText = window.getSelection && window.getSelection().toString() !== "";
+  if (!speaking || event.target === startButton || debugLine.contains(event.target) || selectingText) {
     return;
   }
   const heardSoFar = currentSpeaker ? currentSpeaker.heard() : "";

@@ -93,7 +93,7 @@ PRD ref: `prd.md > Family Questionnaire`.
 PRD ref: `prd.md > Voice Conversation`, `prd.md > Screens and Layout`.
 
 #### Listening
-Uses `webkitSpeechRecognition` with `continuous = true`, `interimResults = true`, `lang = "en-US"`. The page itself decides when the elder has *finished* a turn: after **2 seconds** with no new words (learner's choice after the first live test) (tunable constant `END_OF_TURN_MS`), so a pause mid-story doesn't cut them off. Recognition is paused while the companion speaks so it doesn't hear itself.
+Uses `webkitSpeechRecognition` with `continuous = true`, `interimResults = true`, `lang = "en-US"`. The page itself decides when the elder has *finished* a turn: after **1.5 seconds** with no new words (learner's choice after live testing: 2.5s, then 2s, then 1.5s) (tunable constant `END_OF_TURN_MS`), so a pause mid-story doesn't cut them off. Recognition is paused while the companion speaks so it doesn't hear itself.
 PRD ref: `prd.md > Voice Conversation` ("can talk at length without being cut off").
 
 #### Speaking

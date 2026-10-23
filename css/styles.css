@@ -59,6 +59,12 @@ h1 {
   min-height: 2em;
 }
 
+.hint {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: var(--soft-ink);
+}
+
 .debug {
   margin-top: 16px;
   font-size: 0.85rem;
