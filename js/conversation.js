@@ -1,5 +1,5 @@
 // The Conversation page: listen to the elder, ask the helper for a reply,
-// speak it aloud sentence by sentence, then listen again.
+// speak it aloud as it arrives, then listen again.
 
 // How long a quiet pause must last before we decide the elder has finished
 // speaking. Longer means fewer interruptions mid-story.
@@ -13,6 +13,11 @@ const UNFINISHED_ENDINGS = [
   "let me", "i mean", "you know", "like", "the", "a", "an", "to", "of", "with", "about",
   "i", "i think", "i was", "it was", "that", "if", "when", "then",
 ];
+
+// Sound meter: while the microphone hears the elder making sound ("um",
+// a word Edge missed while restarting), the turn isn't over. But if there has
+// been sound and no new words for this long, it's probably a TV or room noise.
+const SOUND_WITHOUT_WORDS_MS = 6000;
 
 // Speaking pace: a little slower than normal (1 is normal).
 const SPEAKING_RATE = 0.9;
@@ -79,6 +84,56 @@ function pickVoice() {
 if ("speechSynthesis" in window) {
   pickVoice();
   speechSynthesis.onvoiceschanged = pickVoice; // voices often load a moment later
+}
+
+// ---- Sound meter ----
+
+let soundLevel = null;  // reads the microphone's current loudness, once set up
+let recentLevels = [];  // loudness readings from the last 5 seconds of listening
+let lastSound = 0;      // when the elder was last heard making sound
+
+// Ask for the microphone a second time, just to measure loudness. Speech
+// recognition doesn't tell us about sounds it can't turn into words.
+async function startSoundMeter() {
+  if (soundLevel || !navigator.mediaDevices?.getUserMedia) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const audio = new AudioContext();
+    const analyser = audio.createAnalyser();
+    analyser.fftSize = 1024;
+    audio.createMediaStreamSource(stream).connect(analyser);
+    const samples = new Float32Array(analyser.fftSize);
+    soundLevel = () => {
+      analyser.getFloatTimeDomainData(samples);
+      let sum = 0;
+      for (const x of samples) sum += x * x;
+      return Math.sqrt(sum / samples.length);
+    };
+    setInterval(checkForSound, 100);
+  } catch {
+    soundLevel = null; // no meter: the page still works on words alone
+  }
+}
+
+function checkForSound() {
+  if (!listening || stopping) return;
+  const level = soundLevel();
+  // The room's background level is the quietest moment in the last 5 seconds.
+  // Speech has tiny gaps between words, so talking doesn't fool it, and it
+  // adjusts by itself to a fan or a TV.
+  recentLevels.push(level);
+  if (recentLevels.length > 50) recentLevels.shift();
+  const quietLevel = Math.min(...recentLevels);
+  const makingSound = level > Math.max(quietLevel * 3, 0.01);
+  if (!makingSound) return;
+
+  lastSound = performance.now();
+  // Once the elder has started talking, sound keeps the turn open, up to a limit.
+  const wordsRecently = performance.now() - timings.lastWord < SOUND_WITHOUT_WORDS_MS;
+  if (heardText && wordsRecently) {
+    clearTimeout(endOfTurnTimer);
+    endOfTurnTimer = setTimeout(finishTurn, pauseFor(heardText));
+  }
 }
 
 // ---- Listening ----
@@ -235,7 +290,7 @@ function showTimings() {
       `Claude's first words: ${seconds(timings.sent, timings.firstText)} · ` +
       `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
       `Total: ${seconds(timings.lastWord, timings.voiceStart)} · ` +
-      `Listening restarts: ${timings.micRestarts}\n` +
+      `Listening restarts: ${timings.micRestarts} · Sound meter: ${soundLevel ? "on" : "off"}\n` +
       `Voice: ${timings.voiceName || "browser default"}${voiceNote}`
   );
 }
@@ -327,6 +382,7 @@ function sentenceSpeaker(thisTurn) {
       playing = false;
       lastVoiceActivity = performance.now();
       waiting.shift();
+      flush();
       maybeDone();
     };
     speechSynthesis.speak(utterance);
@@ -375,22 +431,35 @@ function sentenceSpeaker(thisTurn) {
     }
   }
 
-  return {
-    add(text) {
-      pending += text;
-      // Speak every complete sentence; keep the unfinished end for later.
-      const match = pending.match(/^[\s\S]*[.!?…]["”’)]?(\s|$)/);
-      if (match) {
-        say(match[0]);
-        pending = pending.slice(match[0].length);
-      }
-    },
-    finish() {
-      finished = true;
+  // Speak the first sentence as soon as it's complete, so the reply starts
+  // quickly. After that, gather the rest while the voice is busy and speak it
+  // in one longer stretch: fewer separate pieces sound much less robotic.
+  function flush() {
+    if (waiting.length > 0) {
+      return; // still speaking; keep gathering
+    }
+    if (finished) {
       if (pending.trim()) {
         say(pending);
         pending = "";
       }
+      return;
+    }
+    const match = pending.match(/^[\s\S]*[.!?…]["”’)]?(\s|$)/);
+    if (match) {
+      say(match[0]);
+      pending = pending.slice(match[0].length);
+    }
+  }
+
+  return {
+    add(text) {
+      pending += text;
+      flush();
+    },
+    finish() {
+      finished = true;
+      flush();
       if (waiting.length === 0 && !speaking) {
         // Nothing came back at all.
         setStatus("The companion couldn't respond.");
@@ -436,5 +505,6 @@ startButton.addEventListener("click", () => {
   }
   history = [];
   startButton.hidden = true;
+  startSoundMeter();
   startListening();
 });
