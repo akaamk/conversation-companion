@@ -29,7 +29,7 @@ Build mode: learn
   Learner check: In Edge, reload the conversation page with `?debug` at the end of the address. Have a short conversation: does the voice sound better, and does the reply start sooner? Tap the screen while it's talking and check it stops and listens. Read the testing line to see what it heard.
   Commit: `Natural voice, streamed replies and tap to interrupt`
 
-- [ ] **3. The companion is tailored and holds back the stories it was told to wait for**
+- [x] **3. The companion is tailored and holds back the stories it was told to wait for**
   Becomes usable: Conversations use your full companion rules plus a fictionalized demo elder's answers. It uses their name, talks about their interests, speaks in short clear sentences, and does not bring up the "wait for them" stories until the elder does.
   Why now: This is the unique kernel, so it comes as early as possible. It also tests the biggest open issue in the spec, whether Haiku reliably holds back. The early checkpoint follows, so your reactions can shape the remaining slices.
   PRD ref: `prd.md > Tailored Companion`
@@ -71,7 +71,7 @@ Build mode: learn
 
 ## Hands-on Checkpoints
 
-- [ ] Early usable behavior explored — after slice 3 (talking with the tailored demo companion on the live link); feedback shapes slices 4–6
+- [x] Early usable behavior explored — after slice 3 (talking with the tailored demo companion on the live link); feedback shapes slices 4–6
 - [ ] Final kick-the-tires exploration and feedback completed
 
 ## Final Review
@@ -106,3 +106,4 @@ Activity mode:
 - Added a sound meter (microphone loudness; room level = quietest moment in the last 5s; sound keeps the turn open for up to 6s without new words), spoke the first sentence alone and the rest in one stretch, and told the companion to use the elder's name rarely and inside a sentence — the learner's slice 3 test found it jumping in mid-speech, "George" sounding tacked on, and Guy sounding more robotic.
 - The name is now used only in the first greeting, the page drops a tacked-on name (", George." / "George.") before speaking, the sound meter's microphone turns off call-style processing, and `&rate=1` / `&meter=off` testing switches were added; the testing line shows what Claude wrote — the learner still heard "George" as a separate sentence and Guy sounding like separate word blocks after the sound meter was added.
 - Normal speaking speed by default, the name allowed in the first reply's greeting, symbols like `*` stripped before speaking ("M*A*S*H*" was read as "M asterisk A…"), a 2.5s pause once a turn passes 12 words, and a 10s window for the sound meter's background level — from the learner's comparison test (normal speed best; cut off during longer talking; the name never used at all). Premium voice noted under PRD > Possible Later Enhancements.
+- Added a "talk to them, not about them" rule — in the learner's slice 3 test the companion once slipped into the third person ("sounds like he had a good time"), echoing the family's third-person background. Early checkpoint: headline handled calmly and steered back; police and movie stories handled well; the learner accepted the browser voice for now.
