@@ -5,6 +5,15 @@
 // speaking. Longer means fewer interruptions mid-story.
 const END_OF_TURN_MS = 1500;
 
+// Extra time to wait when the words so far sound unfinished ("yeah, um…").
+// The browser doesn't write down "um" or "uh", so a hesitation looks like silence.
+const UNFINISHED_EXTRA_MS = 2000;
+const UNFINISHED_ENDINGS = [
+  "yeah", "yes", "well", "so", "and", "but", "or", "because", "um", "uh", "er", "hmm",
+  "let me", "i mean", "you know", "like", "the", "a", "an", "to", "of", "with", "about",
+  "i", "i think", "i was", "it was", "that", "if", "when", "then",
+];
+
 // Speaking pace: a little slower than normal (1 is normal).
 const SPEAKING_RATE = 0.9;
 
@@ -74,6 +83,16 @@ if ("speechSynthesis" in window) {
 
 // ---- Listening ----
 
+// How long to wait for more words, given what has been heard so far.
+function pauseFor(text) {
+  const words = text.toLowerCase().replace(/[^a-z' ]/g, " ").trim().split(/\s+/);
+  const lastOne = words.slice(-1).join(" ");
+  const lastTwo = words.slice(-2).join(" ");
+  const sentenceEnded = /[.!?]$/.test(text.trim());
+  const unfinished = !sentenceEnded && (UNFINISHED_ENDINGS.includes(lastOne) || UNFINISHED_ENDINGS.includes(lastTwo));
+  return unfinished ? END_OF_TURN_MS + UNFINISHED_EXTRA_MS : END_OF_TURN_MS;
+}
+
 function startListening() {
   heardText = "";
   earlierText = "";
@@ -125,7 +144,7 @@ function setUpRecognition() {
 
     // Each new bit of speech restarts the quiet-pause timer.
     clearTimeout(endOfTurnTimer);
-    endOfTurnTimer = setTimeout(finishTurn, END_OF_TURN_MS);
+    endOfTurnTimer = setTimeout(finishTurn, pauseFor(heardText));
   };
 
   // Edge often stops listening on its own after a short silence; restart if
@@ -140,7 +159,7 @@ function setUpRecognition() {
         micRestarts++;
         if (heardText) {
           clearTimeout(endOfTurnTimer);
-          endOfTurnTimer = setTimeout(finishTurn, END_OF_TURN_MS);
+          endOfTurnTimer = setTimeout(finishTurn, pauseFor(heardText));
         }
       }
       try {
