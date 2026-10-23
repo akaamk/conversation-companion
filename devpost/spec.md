@@ -98,6 +98,7 @@ PRD ref: `prd.md > Voice Conversation` ("can talk at length without being cut of
 
 #### Speaking
 `speechSynthesis` with a preferred English voice (prefer names containing "Natural" on Edge), `rate ≈ 0.9` for a measured pace. Text is spoken sentence by sentence; when the last sentence ends, listening resumes.
+**Tap to interrupt:** a tap or click anywhere on the page while speaking calls `speechSynthesis.cancel()` and starts listening immediately (the microphone stays off while speaking, so the companion can't hear itself).
 PRD ref: `prd.md > Voice Conversation`.
 
 #### Orb States

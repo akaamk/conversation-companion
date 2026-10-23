@@ -44,9 +44,9 @@ Build mode: learn
   Why now: The core journey works, so now we make it feel right for the person using it. Doing this after the early checkpoint lets your feedback set the timing and feel.
   PRD ref: `prd.md > Voice Conversation`, `prd.md > Ending a Conversation`, `prd.md > Look and Feel`
   Spec ref: `spec.md > Orb States`, `spec.md > Speaking`, `spec.md > Listening`, `spec.md > Ending Rules`, `spec.md > Look and Feel`
-  Build: Orb states and animations (respecting reduced motion), voice selection (prefer "Natural" voices, rate ≈ 0.9), tuned end-of-turn timing, the `[END]` goodbye marker in the instructions and page, idle check-in and goodbye timers, and a polished stylesheet across all pages.
-  Verify (mechanical): `node --check`. A headless-browser script with a fake speech engine confirms the orb class changes listening → thinking → speaking → listening, that a reply ending in `[END]` is spoken without the marker and stops the conversation, and that the idle timers fire the check-in and then stop. Live `/api/chat` returns `[END]` after "Well, I'd better go. Bye!" Screenshots of each page are reviewed against Look and Feel.
-  Learner check: Have a real conversation. Tell a longer story with pauses, watch the orb, then say goodbye. In a second conversation, go quiet and wait for the check-in.
+  Build: Orb states and animations (respecting reduced motion), voice selection (prefer "Natural" voices, rate ≈ 0.9), tuned end-of-turn timing, tap-anywhere to interrupt while speaking, the `[END]` goodbye marker in the instructions and page, idle check-in and goodbye timers, and a polished stylesheet across all pages.
+  Verify (mechanical): `node --check`. A headless-browser script with a fake speech engine confirms the orb class changes listening → thinking → speaking → listening, that a tap while speaking cancels speech and resumes listening, that a reply ending in `[END]` is spoken without the marker and stops the conversation, and that the idle timers fire the check-in and then stop. Live `/api/chat` returns `[END]` after "Well, I'd better go. Bye!" Screenshots of each page are reviewed against Look and Feel.
+  Learner check: Have a real conversation. Tell a longer story with pauses, watch the orb, tap the screen to interrupt a reply, then say goodbye. In a second conversation, go quiet and wait for the check-in.
   Commit: `Add orb states, natural pacing and conversation endings`
 
 - [ ] **5. It handles the what-ifs gracefully**
@@ -83,4 +83,4 @@ Activity mode:
 ## Revisions
 - Slice 1 live check done by the learner instead of `curl` — this cloud environment's network policy blocks the agent from reaching `conversation-companion-sand.vercel.app`; the learner confirmed spoken replies on the live link.
 - Ignore speech results that arrive after listening stops — the first live test showed one sentence producing several replies (reproduced headlessly: 3 requests for 1 sentence; fixed: 1).
-
+- Added tap-to-interrupt to slice 4 (`prd.md > Voice Conversation`, `spec.md > Speaking`) — the learner found they couldn't interrupt during the first live test and chose tap over voice interruption, which would need a real-time voice model.

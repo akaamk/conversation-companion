@@ -73,6 +73,7 @@ Source: `scope.md > The POC Boundary` (voice in and out).
   - [ ] The companion replies aloud, at a measured pace.
   - [ ] The glowing light visibly differs between **listening** and **speaking**.
   - [ ] The elder can talk at length without being cut off mid-story.
+  - [ ] **Tap to interrupt:** tapping anywhere on the screen while the companion is speaking stops it right away and it starts listening. (Added after the first live test; learner chose this over interrupting by voice.)
 
 ### Ending a Conversation
 - [ ] If the elder says goodbye (e.g., "bye"), the companion says a warm goodbye and stops.
@@ -113,6 +114,7 @@ Source: `scope.md > The POC Boundary` (voice in and out).
 
 ## Possible Later Enhancements
 - Voice-activated start ("Hey, let's chat").
+- Interrupting by speaking (needs a real-time voice model so the companion doesn't hear itself).
 - Saved profiles for multiple families; the elder adding or correcting their own information.
 - Family feedback and "is it making a difference?" questions.
 - Choice of voice (gender, accent, pace) from the questionnaire.
