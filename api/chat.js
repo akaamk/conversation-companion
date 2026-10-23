@@ -4,26 +4,35 @@
 // text while Claude writes it, so the page can start speaking early.
 
 import Anthropic from "@anthropic-ai/sdk";
+import { buildInstructions } from "./companion-instructions.js";
 
 export const MODEL = "claude-haiku-5-5";
 
-// Placeholder companion for slices 1–2. Slice 3 replaces this with the
-// full rules built from the family's questionnaire answers.
-const PLACEHOLDER_INSTRUCTIONS = `You are a warm, friendly conversation companion for an older adult.
-Your replies are spoken aloud, so keep them to two or three short, clear sentences.
-Use plain words. Do not use lists, symbols, or emoji.
-Ask at most one question at a time.`;
+const ANSWER_FIELDS = ["name", "ageAndOrigin", "personality", "interests", "experiences", "holdBack", "communication", "upsetting"];
+
+// Keeps only the questionnaire fields we expect, as plain text of a sensible length.
+export function cleanAnswers(raw) {
+  const answers = {};
+  if (raw && typeof raw === "object") {
+    for (const field of ANSWER_FIELDS) {
+      if (typeof raw[field] === "string") {
+        answers[field] = raw[field].slice(0, 2000);
+      }
+    }
+  }
+  return answers;
+}
 
 export const REFUSAL_REPLY = "Let's talk about something else. What's been on your mind today?";
 
 // Asks Claude for a reply and passes each piece of text to `onText` as it
 // arrives. Returns the whole reply. `client` is passed in so it can be
 // swapped for a stand-in during testing.
-export async function streamReply({ history }, client, onText) {
+export async function streamReply({ answers, history }, client, onText) {
   const stream = client.messages.stream({
     model: MODEL,
     max_tokens: 1024,
-    system: PLACEHOLDER_INSTRUCTIONS,
+    system: buildInstructions(answers),
     messages: history,
     output_config: { effort: "low" },
   });
@@ -61,7 +70,8 @@ export default async function handler(req, res) {
   let started = false;
   try {
     client ??= new Anthropic();
-    await streamReply({ history }, client, (text) => {
+    const answers = cleanAnswers(req.body?.answers);
+    await streamReply({ answers, history }, client, (text) => {
       if (!started) {
         res.writeHead(200, { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-cache" });
         started = true;

@@ -197,7 +197,7 @@ async function finishTurn() {
     const response = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ history }),
+      body: JSON.stringify({ answers: DEMO_ANSWERS, history }),
       signal: replyRequest.signal,
     });
     if (!response.ok) {
