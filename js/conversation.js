@@ -49,6 +49,11 @@ const DIDNT_CATCH = "I didn't quite catch that. Could you say it again?";
 // "Didn't catch that": sound lasting at least this long with no words, at most
 // once in this long (so a cough or a door doesn't keep setting it off).
 const SOUND_NO_WORDS_MS = 1200;
+
+// Mumbling: the browser may guess words anyway. A short turn (a few words) it
+// was this unsure about (0 to 1) gets "say it again" instead of a reply.
+const LOW_CONFIDENCE = 0.5;
+const SHORT_TURN_WORDS = 4;
 const DIDNT_CATCH_GAP_MS = 30000;
 
 const startButton = document.getElementById("start");
@@ -79,6 +84,8 @@ let recognition = null;
 let history = [];       // the conversation so far: [{ role, content }]
 let heardText = "";     // what the elder has said in this turn
 let earlierText = "";   // words from before the browser restarted its listening, this turn
+let confidences = [];   // how sure the browser was of each finished phrase, this turn
+let earlierConfidences = [];
 let micRestarts = 0;    // for the testing line: how often the browser restarted listening this turn
 let endOfTurnTimer = null;
 let listening = false;  // true while we want the microphone on
@@ -238,6 +245,8 @@ function startListening({ keepSilence = false } = {}) {
   heardText = "";
   soundStartedAt = 0;
   earlierText = "";
+  confidences = [];
+  earlierConfidences = [];
   micRestarts = 0;
   listening = true;
   speaking = false;
@@ -295,6 +304,12 @@ function setUpRecognition() {
       return;
     }
     heardText = text.trim();
+    // Browsers report 0 when they don't know how sure they are; leave those out.
+    confidences = earlierConfidences.concat(
+      Array.from(event.results)
+        .filter((result) => result.isFinal && result[0].confidence > 0)
+        .map((result) => result[0].confidence)
+    );
     timings.lastWord = performance.now();
     quietSince = timings.lastWord; // they're talking, so no silence check-in
     soundStartedAt = 0;
@@ -329,6 +344,7 @@ function setUpRecognition() {
     if (listening) {
       if (!wasOurStop) {
         earlierText = heardText;
+        earlierConfidences = confidences;
         micRestarts++;
         if (heardText) {
           clearTimeout(endOfTurnTimer);
@@ -355,6 +371,16 @@ async function finishTurn() {
     return;
   }
 
+  // Probably mumbling: a few words the browser wasn't sure about.
+  const sureness = confidences.length ? Math.min(...confidences) : 1;
+  timings.confidence = confidences.length ? sureness : null;
+  const shortTurn = said.split(/\s+/).length <= SHORT_TURN_WORDS;
+  if (shortTurn && sureness < LOW_CONFIDENCE && performance.now() - lastDidntCatch > DIDNT_CATCH_GAP_MS) {
+    showDebug(`Heard: "${said}" (sure: ${sureness.toFixed(2)}), asked to say it again`);
+    sayDidntCatch();
+    return;
+  }
+
   checkedIn = false;
   sendTurn(said);
 }
@@ -378,8 +404,12 @@ function onSilence() {
 // Heard sound but no words: gently ask them to say it again (not too often).
 function didntCatch() {
   if (!listening || heardText || performance.now() - lastDidntCatch < DIDNT_CATCH_GAP_MS) return;
-  lastDidntCatch = performance.now();
   stopListening();
+  sayDidntCatch();
+}
+
+function sayDidntCatch() {
+  lastDidntCatch = performance.now();
   const speaker = sentenceSpeaker(++turnId, { remember: false });
   currentSpeaker = speaker;
   speaker.add(DIDNT_CATCH);
@@ -426,7 +456,7 @@ async function sendTurn(said) {
   history.push({ role: "user", content: said });
   setStatus("Thinking…");
   setOrb("thinking");
-  timings = { lastWord: timings.lastWord, sent: performance.now(), micRestarts };
+  timings = { lastWord: timings.lastWord, sent: performance.now(), micRestarts, confidence: timings.confidence };
   voiceNote = "";
   showDebug(`Heard: "${said}"`);
 
@@ -478,7 +508,8 @@ function showTimings() {
       `Claude's first words: ${seconds(timings.sent, timings.firstText)} · ` +
       `Voice starting: ${seconds(timings.firstText, timings.voiceStart)} · ` +
       `Total: ${seconds(timings.lastWord, timings.voiceStart)} · ` +
-      `Listening restarts: ${timings.micRestarts} · Sound meter: ${soundLevel ? "on" : "off"}\n` +
+      `Listening restarts: ${timings.micRestarts} · Sound meter: ${soundLevel ? "on" : "off"} · ` +
+      `Sure of the words: ${timings.confidence == null ? "not reported" : timings.confidence.toFixed(2)}\n` +
       `Voice: ${timings.voiceName || "browser default"} at speed ${SPEAKING_RATE}${voiceNote}`
   );
 }
