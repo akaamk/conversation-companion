@@ -31,7 +31,19 @@ const params = new URLSearchParams(location.search);
 // Speaking pace (1 is normal). Slower made Edge's online voices sound choppy.
 const SPEAKING_RATE = Number(params.get("rate")) || 1;
 
+// Silence: after this long with no words, the companion gently checks in;
+// after this much longer with still nothing, it says goodbye and turns the
+// microphone off. (&idle=10000 in the address shortens both, for testing.)
+const IDLE_CHECK_MS = Number(params.get("idle")) || 45000;
+const IDLE_END_MS = params.get("idle") ? IDLE_CHECK_MS / 2 : 20000;
+const FINAL_GOODBYE = "I'll let you go for now. It was good talking with you.";
+
+// Sent to the companion in place of the elder's words after a long silence.
+// Must match IDLE_NOTE in api/companion-instructions.js.
+const IDLE_NOTE = "(They haven't said anything for a while.)";
+
 const startButton = document.getElementById("start");
+const orb = document.getElementById("orb");
 const statusText = document.getElementById("status");
 const debugLine = document.getElementById("debug");
 const interruptHint = document.getElementById("interrupt-hint");
@@ -68,9 +80,17 @@ let voice = null;
 let currentSpeaker = null; // speaks the reply for the current turn
 let timings = {};
 let voiceNote = ""; // for the testing line: set when the voice had to be switched
+let idleTimer = null;
+let checkedIn = false;  // true once the companion has asked "are you still there?"
 
 function setStatus(message) {
   statusText.textContent = message;
+}
+
+// The glowing orb: "listening", "thinking", "speaking", or null to hide it.
+function setOrb(state) {
+  orb.hidden = !state;
+  orb.className = state ? `orb ${state}` : "orb";
 }
 
 function showDebug(text) {
@@ -102,6 +122,7 @@ if ("speechSynthesis" in window) {
 let soundLevel = null;  // reads the microphone's current loudness, once set up
 let recentLevels = [];  // loudness readings from the last 10 seconds of listening
 let lastSound = 0;      // when the elder was last heard making sound
+let meter = null;       // the meter's microphone, audio and timer, so it can be turned off
 
 // Ask for the microphone a second time, just to measure loudness. Speech
 // recognition doesn't tell us about sounds it can't turn into words.
@@ -124,10 +145,22 @@ async function startSoundMeter() {
       for (const x of samples) sum += x * x;
       return Math.sqrt(sum / samples.length);
     };
-    setInterval(checkForSound, 100);
+    meter = { stream, audio, timer: setInterval(checkForSound, 100) };
   } catch {
     soundLevel = null; // no meter: the page still works on words alone
   }
+}
+
+// Turn the meter's microphone off completely.
+function stopSoundMeter() {
+  if (meter) {
+    clearInterval(meter.timer);
+    meter.stream.getTracks?.().forEach((track) => track.stop());
+    meter.audio.close?.();
+  }
+  meter = null;
+  soundLevel = null;
+  recentLevels = [];
 }
 
 function checkForSound() {
@@ -172,6 +205,9 @@ function startListening() {
   speaking = false;
   interruptHint.hidden = true;
   setStatus("Listening…");
+  setOrb("listening");
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(onSilence, checkedIn ? IDLE_END_MS : IDLE_CHECK_MS);
   if (stopping) {
     return; // the microphone restarts once the old session has fully ended
   }
@@ -186,6 +222,7 @@ function stopListening() {
   listening = false;
   stopping = true;
   clearTimeout(endOfTurnTimer);
+  clearTimeout(idleTimer);
   recognition.stop();
 }
 
@@ -212,6 +249,7 @@ function setUpRecognition() {
     }
     heardText = text.trim();
     timings.lastWord = performance.now();
+    clearTimeout(idleTimer); // they're talking, so no silence check-in
 
     // Each new bit of speech restarts the quiet-pause timer.
     clearTimeout(endOfTurnTimer);
@@ -253,9 +291,58 @@ async function finishTurn() {
     return;
   }
 
+  checkedIn = false;
+  sendTurn(said);
+}
+
+// A long silence: first a gentle check-in from the companion; if there's
+// still nothing after that, a short goodbye, and the microphone goes off.
+function onSilence() {
+  if (!listening || heardText) return;
+  stopListening();
+  if (checkedIn) {
+    const speaker = sentenceSpeaker(++turnId, { endAfter: true, remember: false });
+    currentSpeaker = speaker;
+    speaker.add(FINAL_GOODBYE);
+    speaker.finish();
+  } else {
+    checkedIn = true;
+    sendTurn(IDLE_NOTE);
+  }
+}
+
+// Ends the conversation: microphone off (both the listening and the sound
+// meter), orb hidden, and the big Start button back.
+function endConversation() {
+  const wasListening = listening;
+  turnId++;
+  listening = false;
+  speaking = false;
+  clearTimeout(endOfTurnTimer);
+  clearTimeout(idleTimer);
+  if (replyRequest) replyRequest.abort();
+  // Only stop listening if it's on: stopping it when it's already off would
+  // leave the page waiting for a "stopped" signal that never comes.
+  if (recognition && wasListening) {
+    stopping = true;
+    try {
+      recognition.stop();
+    } catch {
+      stopping = false;
+    }
+  }
+  stopSoundMeter();
+  setOrb(null);
+  interruptHint.hidden = true;
+  setStatus("");
+  startButton.hidden = false;
+}
+
+async function sendTurn(said) {
   const thisTurn = ++turnId;
   history.push({ role: "user", content: said });
   setStatus("Thinking…");
+  setOrb("thinking");
   timings = { lastWord: timings.lastWord, sent: performance.now(), micRestarts };
   voiceNote = "";
   showDebug(`Heard: "${said}"`);
@@ -289,8 +376,8 @@ async function finishTurn() {
     speaker.finish();
   } catch (error) {
     if (thisTurn !== turnId) return; // interrupted on purpose
+    endConversation();
     setStatus(error.message);
-    startButton.hidden = false;
   }
 }
 
@@ -345,7 +432,9 @@ function withoutTackedOnName(text) {
 
 // Collects the reply as it streams in and speaks each sentence as soon as
 // it is complete. When the last sentence has been spoken, listening resumes.
-function sentenceSpeaker(thisTurn) {
+// Options: endAfter ends the conversation once everything is spoken;
+// remember: false keeps the words out of the conversation history.
+function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
   let rawReply = "";   // everything Claude wrote, for the testing line
   let pending = "";    // text not yet complete enough to speak
   let spoken = "";     // what the elder has actually heard so far
@@ -375,6 +464,7 @@ function sentenceSpeaker(thisTurn) {
     if (!speaking) {
       speaking = true;
       setStatus("Speaking…");
+      setOrb("speaking");
       interruptHint.hidden = false;
     }
     if (waiting.length === 0) {
@@ -466,15 +556,31 @@ function sentenceSpeaker(thisTurn) {
       if (debugMode && rawReply.trim()) {
         debugLine.textContent += `\nClaude wrote: "${rawReply.trim()}"`;
       }
-      history.push({ role: "assistant", content: spoken.trim() || pending.trim() || "…" });
-      startListening();
+      if (remember) {
+        history.push({ role: "assistant", content: spoken.trim() || pending.trim() || "…" });
+      }
+      if (endAfter) {
+        endConversation();
+      } else {
+        startListening();
+      }
     }
   }
 
   // Speak the first sentence as soon as it's complete, so the reply starts
   // quickly. After that, gather the rest while the voice is busy and speak it
   // in one longer stretch: fewer separate pieces sound much less robotic.
+  // The companion ends its goodbye with [END]: never speak it, and end the
+  // conversation once the goodbye has been said.
+  function takeEndMarker() {
+    if (/\[\s*END\s*\]/i.test(pending)) {
+      pending = pending.replace(/\[\s*END\s*\]/gi, "");
+      endAfter = true;
+    }
+  }
+
   function flush() {
+    takeEndMarker();
     if (waiting.length > 0) {
       return; // still speaking; keep gathering
     }
@@ -551,6 +657,7 @@ startButton.addEventListener("click", () => {
     setUpRecognition();
   }
   history = [];
+  checkedIn = false;
   startButton.hidden = true;
   startSoundMeter();
   startListening();

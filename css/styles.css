@@ -248,3 +248,53 @@ form .button {
 [hidden] {
   display: none !important;
 }
+
+/* ---- The glowing orb (Conversation page) ---- */
+
+.orb {
+  width: 220px;
+  height: 220px;
+  margin: 8px auto 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%, #fff1e2 0%, var(--peach) 45%, var(--terracotta) 100%);
+  box-shadow: 0 0 60px rgba(200, 105, 63, 0.35);
+  cursor: pointer;
+}
+
+/* Listening: a slow, gentle breath. */
+.orb.listening {
+  animation: orb-breathe 3.2s ease-in-out infinite;
+}
+
+/* Thinking: dimmer and slower. */
+.orb.thinking {
+  opacity: 0.6;
+  animation: orb-dim 1.8s ease-in-out infinite;
+}
+
+/* Speaking: brighter and livelier. */
+.orb.speaking {
+  animation: orb-speak 0.9s ease-in-out infinite;
+}
+
+@keyframes orb-breathe {
+  50% { transform: scale(1.06); box-shadow: 0 0 80px rgba(200, 105, 63, 0.45); }
+}
+
+@keyframes orb-dim {
+  50% { opacity: 0.4; transform: scale(0.97); }
+}
+
+@keyframes orb-speak {
+  50% { transform: scale(1.12); box-shadow: 0 0 110px rgba(200, 105, 63, 0.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orb { animation: none !important; }
+  .orb.thinking { opacity: 0.6; }
+  .orb.speaking { box-shadow: 0 0 110px rgba(200, 105, 63, 0.6); }
+}
+
+.conversation-page main {
+  padding-top: 10vh;
+}

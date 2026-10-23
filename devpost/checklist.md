@@ -110,3 +110,4 @@ Activity mode:
 - Kept `js/demo-answers.js` as a testing aid instead of removing it: `questionnaire.html?demo` fills in George's answers (handy for testing and the demo video) and `conversation.html?demo` uses them directly; without `?demo` the Conversation page only uses the family's saved answers.
 - Added question 9, a man's or woman's voice with "Hear it" samples (`js/voices.js`, shared by the questionnaire and conversation) — the learner made a profile for a woman ("Sarah") and it still spoke with Guy. Learner check for slice 4 passed: the pages look good and the companion knew who it was talking with.
 
+- Ending a conversation also turns off the sound meter's microphone (added in slice 2), and the silence check-in is sent as a note in place of the elder's words rather than a hidden system message; `&idle=` testing switch added. Found and fixed while testing: pressing Start after a goodbye would never start listening.

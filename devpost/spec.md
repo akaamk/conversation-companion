@@ -108,7 +108,8 @@ PRD ref: `prd.md > Voice Conversation` ("light visibly differs").
 
 #### Ending Rules
 - **Goodbye:** the companion instructions tell Claude that when the elder is clearly ending the conversation, it says a warm goodbye and ends its reply with the marker `[END]`. The page removes the marker before speaking, then stops.
-- **Silence:** if listening for **~45 seconds** (`IDLE_CHECK_MS`) with no speech, the page sends a hidden note to the helper so Claude produces a gentle "Are you still there?" in its own words; if another **~20 seconds** (`IDLE_END_MS`) pass with nothing, the page speaks a short fixed goodbye and stops.
+- **Silence:** after **~45 seconds** (`IDLE_CHECK_MS`) with no words, the page sends the note "(They haven't said anything for a while.)" in place of the elder's words, and Claude asks in its own words whether they're still there; after another **~20 seconds** (`IDLE_END_MS`) with nothing, the page speaks a short fixed goodbye and ends the conversation. `&idle=10000` in the address shortens both for testing.
+- **Ending** turns off both the listening and the sound meter's microphone, hides the orb, and shows the Start button; pressing Start begins a fresh conversation.
 - Stopping returns to the Start button; the conversation history is cleared.
 PRD ref: `prd.md > Ending a Conversation`.
 
