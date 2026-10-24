@@ -74,7 +74,7 @@ export function buildInstructions(answers = {}, today = "") {
 
   const about = [];
   if (name) {
-    about.push(`They like to be called ${name}. Use the name only once, in your first greeting. After that, do not use it at all: friends rarely say each other's names in conversation, and a name tacked on at the end of a sentence sounds odd when spoken aloud.`);
+    about.push(`Their name is ${name}. Don't say their name aloud: the computer voice makes names sound stiff and robotic. Talk with them warmly without it.`);
   }
   for (const [key, label] of ABOUT_FIELDS) {
     const value = clean(answers[key]);

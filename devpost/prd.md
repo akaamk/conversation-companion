@@ -59,7 +59,7 @@ Source: `scope.md > The POC Boundary` (short questionnaire). Eight questions, dr
 ### Tailored Companion
 Source: `scope.md > The Unique Kernel`. The answers are turned into companion behavior modeled on the learner's original GPT instructions ("The Conversation Companion — revised for age 98").
 
-- [ ] The companion addresses the elder by their preferred name.
+- [ ] The companion knows the elder's preferred name but doesn't say it aloud (changed during the final review: Edge's voice made the name sound robotic).
 - [ ] It brings up general topics from their interests (Q4) when conversation slows.
 - [ ] **It does not mention the experiences listed in Q6 unless the elder raises them first**; once raised, it responds naturally and asks relevant questions.
 - [ ] It follows the hearing/communication guidance (Q7): short, clear sentences; one question at a time at most; rephrases in simpler words rather than repeating.

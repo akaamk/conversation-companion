@@ -541,16 +541,18 @@ function speakable(text) {
     .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu, "");
 }
 
-// Removes the elder's name where it's tacked on: "That's grand, George." becomes
-// "That's grand." and a lone "George." disappears. A name inside a sentence stays.
-// The very first reply may use the name in its greeting.
+// The companion doesn't say the elder's name aloud (Edge's voices make names
+// sound robotic), so remove it if Claude uses it anyway: "Hello, George!"
+// becomes "Hello!", "Well, George, that's grand" becomes "Well, that's grand",
+// and a lone "George." disappears. Other uses ("George Washington") stay.
 function withoutTackedOnName(text) {
-  const firstReply = !history.some((message) => message.role === "assistant");
-  if (!elderName || firstReply) return text;
+  if (!elderName) return text;
   const name = elderName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   return text
-    .replace(new RegExp(`(^|[.!?]\\s+)${name}([.!?])\\s*`, "g"), "$1")
-    .replace(new RegExp(`,\\s*${name}([.!?])`, "g"), "$1");
+    .replace(new RegExp(`\\b(hello|hi|hey|good morning|good afternoon|good evening|well|oh|ah),?\\s+${name}\\b(?!\\s+[A-Z])`, "gi"), "$1")
+    .replace(new RegExp(`(^|[.!?]\\s+)${name}([.!?,])\\s*`, "g"), "$1")
+    .replace(new RegExp(`,\\s*${name}(?=[.!?,])`, "g"), "")
+    .replace(/^\s*([a-z])/, (letter) => letter.toUpperCase());
 }
 
 // Collects the reply as it streams in and speaks each sentence as soon as
