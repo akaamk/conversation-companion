@@ -28,6 +28,10 @@ const SOUND_WITHOUT_WORDS_MS = 6000;
 // turns off the sound meter (to compare how the voice sounds without it).
 const params = new URLSearchParams(location.search);
 
+// The first sentence of a reply is spoken as soon as it arrives, unless it is
+// shorter than this many words: then it waits to be joined by the next one.
+const SHORT_OPENING_WORDS = 8;
+
 // Speaking pace (1 is normal). Slower made Edge's online voices sound choppy.
 const SPEAKING_RATE = Number(params.get("rate")) || 1;
 
@@ -712,10 +716,17 @@ function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
       return;
     }
     const match = pending.match(/^[\s\S]*[.!?…]["”’)]?(\s|$)/);
-    if (match) {
-      say(match[0]);
-      pending = pending.slice(match[0].length);
+    if (!match) {
+      return;
     }
+    // A very short opening ("Hello, George!") spoken on its own sounds flat
+    // and robotic, so wait for the next sentence and say them together.
+    const nothingSaidYet = rawReply.length === pending.length;
+    if (nothingSaidYet && match[0].trim().split(/\s+/).length < SHORT_OPENING_WORDS) {
+      return;
+    }
+    say(match[0]);
+    pending = pending.slice(match[0].length);
   }
 
   const api = {
@@ -765,6 +776,20 @@ document.addEventListener("click", (event) => {
   startListening();
 });
 
+// ---- Voice warm-up ----
+
+// Edge's natural voices are made online by Microsoft. A silent sample when
+// Start is pressed opens that connection, so the first real reply doesn't
+// sound rougher than the rest.
+function warmUpVoice() {
+  if (!("speechSynthesis" in window)) return;
+  const utterance = new SpeechSynthesisUtterance("Hello.");
+  utterance.lang = "en-US";
+  utterance.volume = 0;
+  if (voice) utterance.voice = voice;
+  speechSynthesis.speak(utterance);
+}
+
 // ---- Stop ----
 
 // The small Stop button: end right away, with no goodbye.
@@ -793,6 +818,7 @@ startButton.addEventListener("click", () => {
   showProblem("");
   startButton.hidden = true;
   stopButton.hidden = false;
+  warmUpVoice();
   startSoundMeter();
   startListening();
 });
