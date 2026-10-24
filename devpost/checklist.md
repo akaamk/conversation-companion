@@ -78,7 +78,8 @@ Build mode: learn
 
 - [x] Mumbling sometimes got a reply instead of "say it again": treat short, low-confidence speech as not caught (learner's final-review finding). Done: a turn of up to 4 words the browser is less than 0.5 sure of gets "say it again" (at most once in 30s); `?debug` shows how sure it was. Verified with 6 new checks. Learner retry: Edge reports confidence 1.0 even for gibberish, so the check only helps in browsers that report real confidence; Claude's instructions now say to ask again when what it received doesn't make sense, and to carry on when only a word or two is unclear. Learner retried: gibberish now gets "say it again"; the learner had nothing else to change
 - [x] Add a small Stop button in a bottom corner that ends the conversation immediately (learner's request while reviewing the code route). Built and verified with 11 checks; learner confirmed it works.
-- [ ] The first lines of a conversation sounded robotic ("Hello, George!"): join a short opening (under 8 words) with the next sentence, and warm up the online voice silently on Start (learner chose both). Verified with 3 new checks; learner to retry
+- [ ] The first lines of a conversation sounded robotic ("Hello, George!"): join a short opening (under 8 words) with the next sentence, and warm up the online voice silently on Start (learner chose both). Verified with 3 new checks. Learner retry: later lines sound better, but the first line still sounds robotic, especially the name (decision pending on not saying the name aloud)
+- [ ] With short answers, the companion kept falling back to baseball-on-the-radio questions (radio never mentioned; baseball is seasonal): instructions now forbid adding details that weren't given, keep the season in mind (today's date is passed in), and say to vary topics or let them lead after short answers. Learner to retry
 - [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map

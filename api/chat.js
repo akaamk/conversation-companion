@@ -24,6 +24,14 @@ export function cleanAnswers(raw) {
   return answers;
 }
 
+// Today's date, for the companion's sense of the season. The demo family is in
+// New York; a later version could take the family's time zone from the browser.
+export function todayInNewYork() {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York",
+  });
+}
+
 export const REFUSAL_REPLY = "Let's talk about something else. What's been on your mind today?";
 
 // Asks Claude for a reply and passes each piece of text to `onText` as it
@@ -33,7 +41,7 @@ export async function streamReply({ answers, history }, client, onText) {
   const stream = client.messages.stream({
     model: MODEL,
     max_tokens: 1024,
-    system: buildInstructions(answers),
+    system: buildInstructions(answers, todayInNewYork()),
     messages: history,
     output_config: { effort: "low" },
   });
