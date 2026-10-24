@@ -131,7 +131,8 @@
       <li><strong>The pause before it answers</strong>: <code>END_OF_TURN_MS</code> (1.5 seconds), <code>STORY_PAUSE_MS</code> and <code>UNFINISHED_ENDINGS</code> near the top of <code>js/conversation.js</code>.</li>
       <li><strong>The Stop button</strong>: <code>stopButton</code> in <code>js/conversation.js</code> (it calls <code>endConversation</code>); its look is <code>.stop-button</code> in <code>css/styles.css</code>.</li>
       <li><strong>The silence check-in</strong>: <code>IDLE_CHECK_MS</code>, <code>IDLE_END_MS</code> and <code>FINAL_GOODBYE</code> in <code>js/conversation.js</code>.</li>
-      <li><strong>The voices</strong>: <code>PREFERRED_VOICES</code> in <code>js/voices.js</code> (Guy first for a man's voice).</li>
+      <li><strong>The voices</strong>: <code>PREFERRED_VOICES</code> in <code>js/voices.js</code> (Guy first for a man's voice); the silent warm-up on Start is <code>warmUpVoice</code> and short openings are joined using <code>SHORT_OPENING_WORDS</code>, both in <code>js/conversation.js</code>.</li>
+      <li><strong>Saying (or not saying) the name</strong>: the rule in <code>buildInstructions</code> in <code>api/companion-instructions.js</code>, and the safety net <code>withoutTackedOnName</code> in <code>js/conversation.js</code>.</li>
       <li><strong>The look</strong>: <code>css/styles.css</code>; the orb colors are under "The glowing orb".</li>
       <li><strong>The AI model</strong>: <code>MODEL</code> in <code>api/chat.js</code> (<code>claude-haiku-5-5</code>; <code>claude-opus-5-5</code> is the one-line switch).</li>
     </ul>
@@ -157,7 +158,7 @@
     </div>
   </details>
 
-  <footer>A snapshot of the code at commit <code>33c288d</code>. The code can change after this, so search for the names shown above if anything has moved.</footer>
+  <footer>A snapshot of the code at commit <code>24b6a76</code>. The code can change after this, so search for the names shown above if anything has moved.</footer>
 </main>
 </body>
 </html>
