@@ -64,6 +64,7 @@ Elder speaks ─► Browser speech recognition ─► text
 - **To try it:** open the Vercel link (e.g. `https://<project>.vercel.app`) in Chrome or Edge → Get started → fill out the questionnaire → Start → allow the microphone → talk.
 - **Updating:** every push to the GitHub repo's main branch redeploys automatically.
 - **Demo recording:** record the screen and audio on the learner's Windows computer (e.g. the built-in Xbox Game Bar or Clipchamp — decided in `6-ship`) while using the live link. Submission still requires the demo video and the public GitHub repo; the link is a bonus.
+- **Sharing (for submission):** public repository https://github.com/akaamk/conversation-companion (checked for secrets and private details); live app https://conversation-companion-sand.vercel.app; demo video link to be added once uploaded.
 - **Local fallback (not planned):** `npx vercel dev` would run it on a computer, but isn't needed.
 
 ## Look and Feel
