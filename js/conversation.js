@@ -57,6 +57,7 @@ const SHORT_TURN_WORDS = 4;
 const DIDNT_CATCH_GAP_MS = 30000;
 
 const startButton = document.getElementById("start");
+const stopButton = document.getElementById("stop");
 const problemNote = document.getElementById("problem");
 const orb = document.getElementById("orb");
 const statusText = document.getElementById("status");
@@ -429,9 +430,10 @@ function stopForProblem(message) {
 // meter), orb hidden, and the big Start button back.
 function endConversation() {
   const wasListening = listening;
-  turnId++;
+  turnId++; // first, so nothing from the current turn carries on
   listening = false;
   speaking = false;
+  speechSynthesis.cancel();
   clearTimeout(endOfTurnTimer);
   if (replyRequest) replyRequest.abort();
   // Only stop listening if it's on: stopping it when it's already off would
@@ -448,6 +450,7 @@ function endConversation() {
   setOrb(null);
   interruptHint.hidden = true;
   setStatus("");
+  stopButton.hidden = true;
   startButton.hidden = false;
 }
 
@@ -748,7 +751,7 @@ function sentenceSpeaker(thisTurn, { endAfter = false, remember = true } = {}) {
 document.addEventListener("click", (event) => {
   // Selecting text (for example, copying the testing line) is not a tap.
   const selectingText = window.getSelection && window.getSelection().toString() !== "";
-  if (!speaking || event.target === startButton || debugLine.contains(event.target) || selectingText) {
+  if (!speaking || event.target === startButton || event.target === stopButton || debugLine.contains(event.target) || selectingText) {
     return;
   }
   const heardSoFar = currentSpeaker ? currentSpeaker.heard() : "";
@@ -760,6 +763,13 @@ document.addEventListener("click", (event) => {
     history.push({ role: "assistant", content: heardSoFar.trim() + " …" });
   }
   startListening();
+});
+
+// ---- Stop ----
+
+// The small Stop button: end right away, with no goodbye.
+stopButton.addEventListener("click", () => {
+  endConversation();
 });
 
 // ---- Start ----
@@ -782,6 +792,7 @@ startButton.addEventListener("click", () => {
   checkedIn = false;
   showProblem("");
   startButton.hidden = true;
+  stopButton.hidden = false;
   startSoundMeter();
   startListening();
 });

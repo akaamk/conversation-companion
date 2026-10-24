@@ -77,6 +77,7 @@ Source: `scope.md > The POC Boundary` (voice in and out).
   - [ ] **Tap to interrupt:** tapping anywhere on the screen while the companion is speaking stops it right away and it starts listening. (Added after the first live test; learner chose this over interrupting by voice.)
 
 ### Ending a Conversation
+- [ ] A small **Stop** button in the bottom-right corner, shown only during a conversation, ends it immediately with no goodbye (added at the learner's request during the final review).
 - [ ] If the elder says goodbye (e.g., "bye"), the companion says a warm goodbye and stops.
 - [ ] If the elder is silent for a while, the companion gently asks if they're still there or want to keep talking.
 - [ ] If there's still no answer, the companion says goodbye and stops; the screen returns to the big Start button.

@@ -77,18 +77,19 @@ Build mode: learn
 ## Final Review
 
 - [x] Mumbling sometimes got a reply instead of "say it again": treat short, low-confidence speech as not caught (learner's final-review finding). Done: a turn of up to 4 words the browser is less than 0.5 sure of gets "say it again" (at most once in 30s); `?debug` shows how sure it was. Verified with 6 new checks. Learner retry: Edge reports confidence 1.0 even for gibberish, so the check only helps in browsers that report real confidence; Claude's instructions now say to ask again when what it received doesn't make sense, and to carry on when only a word or two is unclear. Learner retried: gibberish now gets "say it again"; the learner had nothing else to change
-- [x] Final review complete — feedback resolved and learner confirms ready to ship
+- [ ] Add a small Stop button in a bottom corner that ends the conversation immediately (learner's request while reviewing the code route)
+- [ ] Final review complete — feedback resolved and learner confirms ready to ship
 
 ## Code Tour and App Map
 
-- [ ] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
-- [ ] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
+- [x] Learning activity complete — guided route, focused alternative, prior practice connected, or brief recap
+- [x] Optional edit and transfer reflection addressed — offered/declined/already covered/not applicable as appropriate
 - [x] `devpost/app-map.html` generated from finished code, checked, and shown, including a project-grounded practice to reuse
 
 Activity and evidence: Guided route (static walkthrough on GitHub) following the kernel: question 6 → saved → sent each turn → built into the hold-back rules. Practice connected: "measure before you fix" (the learner's `?debug` timing numbers drove the pause decision; Edge's 1.0 confidence ruled out one mumbling fix).
-Route and stops: `js/questionnaire.js` (`sessionStorage.setItem`), `js/conversation.js` (`JSON.stringify({ answers, history })`), `api/companion-instructions.js` (`HOLD_BACK_RULE`, `buildInstructions`). Route sent; the learner left for the evening before replying, so whether they opened each stop isn't confirmed.
-Edit outcome: offered (`FINAL_GOODBYE` wording); no answer yet — the learner left for the evening.
-Reflection: offered; no answer yet.
+Route and stops: `js/questionnaire.js#L51` (`sessionStorage.setItem`), `js/conversation.js#L471` (`JSON.stringify({ answers, history })`), `api/companion-instructions.js#L44` and `#L83` (`HOLD_BACK_RULE`, "Know but do not mention first"). The learner reviewed the route on GitHub (asked how to find the stops, then reviewed them), and while reviewing it asked for a manual Stop button.
+Edit outcome: offered (`FINAL_GOODBYE` wording); declined ("we can keep the goodbye for now").
+Reflection: offered; answered (kept in the learner profile).
 Activity mode: explicit static fallback (code viewed on GitHub; the app runs only on Vercel).
 
 ## Revisions

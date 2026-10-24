@@ -311,3 +311,34 @@ form .button {
 .conversation-page main {
   padding-top: 10vh;
 }
+
+/* The small Stop button, bottom-right corner, shown during a conversation. */
+.stop-button {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2px solid var(--soft-ink);
+  background: var(--cream);
+  color: var(--soft-ink);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.stop-button:hover,
+.stop-button:focus-visible {
+  opacity: 1;
+  border-color: var(--ink);
+  color: var(--ink);
+}
+
+.stop-button:focus-visible {
+  outline: 3px solid var(--ink);
+  outline-offset: 3px;
+}
+

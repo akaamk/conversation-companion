@@ -14,7 +14,7 @@ The companion can know a person's favorite stories but **hold them back until th
 2. A family member answers nine questions: the name they like to be called, their background and personality, favorite subjects, the stories they love to tell, which of those to wait for them to bring up, hearing and communication needs, subjects that upset them, and a man's or woman's voice.
 3. Press **Create their companion**, hand over the device, and press the big **Start** button.
 4. They just talk. There is nothing to type or read. A glowing light shows what's happening: **green** while listening, **gold** while thinking, **terracotta** while speaking. Tapping the screen interrupts the companion.
-5. The conversation ends when they say goodbye (or "I have to go"), or after a long silence and a gentle "Are you still there?". The microphone then turns off.
+5. The conversation ends when they say goodbye (or "I have to go"), after a long silence and a gentle "Are you still there?", or right away with the small **Stop** button in the bottom-right corner. The microphone then turns off.
 
 To try it without typing a profile, open `/questionnaire.html?demo` to fill in a fictional demo person, George.
 
