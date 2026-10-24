@@ -57,7 +57,7 @@ Source: `scope.md > The POC Boundary` (short questionnaire). Eight questions, dr
   - [ ] Submitting moves to the Conversation screen.
 
 ### Tailored Companion
-Source: `scope.md > The Unique Kernel`. The answers are turned into companion behavior modeled on the learner's original GPT instructions ("The Conversation Companion — revised for age 98").
+Source: `scope.md > The Unique Kernel`. The answers are turned into companion behavior modeled on the learner's original GPT instructions ("The Conversation Companion").
 
 - [ ] The companion knows the elder's preferred name but doesn't say it aloud (changed during the final review: Edge's voice made the name sound robotic).
 - [ ] It brings up general topics from their interests (Q4) when conversation slows.
@@ -96,7 +96,7 @@ Source: `scope.md > The POC Boundary` (voice in and out).
 - **Elder speaks first** — "Hi!" or "Let's chat."
 - **Glowing light instead of text** — the elder shouldn't need to read; the light shows listening vs. speaking.
 - **Two ways to end** — goodbye, or silence → check-in → goodbye.
-- **Demo elder based on the learner's dad, with identifying details changed** — the demo is public. (`scope.md > Explicitly Cut`)
+- **Demo elder based on the learner's parent, with identifying details changed** — the demo is public. (`scope.md > Explicitly Cut`)
 - **Warm, soft, calm, large text** — accessible for older users.
 
 ## What We're Building
@@ -128,7 +128,7 @@ Source: `scope.md > The POC Boundary` (voice in and out).
 - **Not a caregiver, therapist, or medical tool** — never claims to treat or prevent dementia.
 - **No memory between conversations** — privacy; background comes from the questionnaire.
 - **No accounts or public launch** — out of proof-of-concept size.
-- **No real identifying details** about the learner's father.
+- **No real identifying details** about the learner's parent.
 - **No memory quizzes or brain-training exercises** — against the learner's core rules.
 
 ## Open Questions

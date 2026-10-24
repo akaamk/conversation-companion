@@ -124,7 +124,7 @@ PRD ref: `prd.md > Tailored Companion`.
 
 ### Companion Instructions
 `api/companion-instructions.js`. The heart of the kernel.
-- A fixed **core rules** section adapted from the learner's "The Conversation Companion" GPT instructions, made general (no references to the learner's father): role and purpose, personality and style, hearing and communication, sensitive subjects, well-being, memory and privacy, starting a conversation, overall goal — plus short replies suited to being spoken aloud (no lists or symbols), and the `[END]` rule.
+- A fixed **core rules** section adapted from the learner's "The Conversation Companion" GPT instructions, made general (no references to the learner's parent): role and purpose, personality and style, hearing and communication, sensitive subjects, well-being, memory and privacy, starting a conversation, overall goal — plus short replies suited to being spoken aloud (no lists or symbols), and the `[END]` rule.
 - A **"About the person you're talking with"** section filled from the 8 answers.
 - A clearly marked **"Know but do not mention first"** section from Q6, with the rule: never raise these unless the person brings them up first; then respond naturally and ask relevant questions.
 - Blank answers are simply left out.
