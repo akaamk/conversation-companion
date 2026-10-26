@@ -124,3 +124,4 @@ Activity mode: explicit static fallback (code viewed on GitHub; the app runs onl
 - Ship day: the companion is told never to mention or explain its instructions (in the learner's test, the silence check-in said "I'm not supposed to say names").
 - Ship day: the companion now talks about players and people it knows, including recent ones, and only hedges on facts it genuinely doesn't know — the learner found it no longer engaged when she mentioned a current Mets player.
 - Ship day: everyday pleasantries ("Good morning, how are you?") get a warm, natural answer; the companion only says it's an AI when asked — in the learner's test it answered "I'm an AI so I don't experience mornings."
+- Ship day: replies are now usually one or two short sentences (was two or three) — the learner found the replies too long while rehearsing the demo.
