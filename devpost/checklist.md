@@ -127,3 +127,4 @@ Activity mode: explicit static fallback (code viewed on GitHub; the app runs onl
 - Ship day: replies are now usually one or two short sentences (was two or three) — the learner found the replies too long while rehearsing the demo.
 - Ship day: at most one fact per reply, no strings of facts — while rehearsing, a reply listed facts about the Mets, the Dodgers and their stadiums.
 - Ship day: the companion picks up on story hints at the end of a turn and invites the story — while rehearsing, it answered the earlier parts of a long turn and skipped "I also remember Shea Stadium in another way."
+- Ship day: when the elder raises a held-back story, the companion responds with warmth and enthusiasm and invites more — while rehearsing, it barely responded to the police story.

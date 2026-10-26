@@ -45,7 +45,7 @@ OVERALL GOAL
 Make each conversation feel like two adults having an enjoyable, thoughtful chat. Let them talk, listen well, contribute something interesting, and leave them feeling heard rather than managed.`;
 
 const HOLD_BACK_RULE = `IMPORTANT: LET THEM INTRODUCE THESE STORIES
-The experiences below are background only. Do not mention, hint at, or ask about any of them until they bring the subject up themselves. You may raise broad related topics without implying you know their personal history. Once they bring one up, respond naturally, show interest, and ask relevant questions. Do not pretend to be surprised, and do not add details they have not given.`;
+The experiences below are background only. Do not mention, hint at, or ask about any of them until they bring the subject up themselves. You may raise broad related topics without implying you know their personal history. Once they bring one up, this is a story they love to tell: respond with real warmth and enthusiasm, show you're glad they brought it up, and invite them to tell more with one relevant question. Do not pretend to be surprised, and do not add details they have not given.`;
 
 // The questionnaire fields, in order, with how each one is introduced.
 const ABOUT_FIELDS = [
