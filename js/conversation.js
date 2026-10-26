@@ -130,10 +130,10 @@ function showDebug(text) {
 
 // ---- Choosing a voice ----
 
-// The family's choice from the questionnaire ("man" or "woman"; Guy is the
-// default man's voice). See js/voices.js. A voice can be tried out by adding
+// The family's choice from the questionnaire ("man" or "woman"; the woman's
+// voice, Jenny, is the default). See js/voices.js. A voice can be tried out by adding
 // ?voice=Name to the address.
-const voiceKind = (answers && answers.voice) || "man";
+const voiceKind = (answers && answers.voice) || "woman";
 const requestedVoice = params.get("voice");
 
 function pickVoice() {

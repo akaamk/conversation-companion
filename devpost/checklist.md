@@ -119,3 +119,4 @@ Activity mode: explicit static fallback (code viewed on GitHub; the app runs onl
 - Slice 5 learner check passed: goodbye ends the conversation and brings back Start (the learner kept how it ended when they said their grandson was calling), the silence check-in works, the orb colors are clear, and the woman's voice is used when chosen.
 - Slice 6 learner check passed: the blocked-microphone note showed, and mumbling "more or less worked" (followed up in the final review). Final automated run before the final review: 131 checks across 17 test scripts, all passing.
 
+- Ship day: the woman's voice (Jenny) is now the default and listed first in question 9, including for the demo profile — the learner found Guy still sounded robotic in conversation.

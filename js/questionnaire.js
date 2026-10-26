@@ -18,7 +18,7 @@ if (new URLSearchParams(location.search).has("demo") && typeof DEMO_ANSWERS !== 
   for (const field of FIELDS) {
     form.elements[field].value = DEMO_ANSWERS[field] || "";
   }
-  setVoiceChoice(DEMO_ANSWERS.voice || "man");
+  setVoiceChoice(DEMO_ANSWERS.voice || "woman");
 }
 
 // If the family comes back to change something, show what they wrote before.
@@ -28,7 +28,7 @@ try {
     for (const field of FIELDS) {
       form.elements[field].value = saved[field] || "";
     }
-    setVoiceChoice(saved.voice || "man");
+    setVoiceChoice(saved.voice || "woman");
   }
 } catch {
   // Nothing saved, or storage unavailable: start with an empty form.
