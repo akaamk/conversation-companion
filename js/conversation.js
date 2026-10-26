@@ -22,7 +22,11 @@ const UNFINISHED_ENDINGS = [
 // Sound meter: while the microphone hears the elder making sound ("um",
 // a word Edge missed while restarting), the turn isn't over. But if there has
 // been sound and no new words for this long, it's probably a TV or room noise.
-const SOUND_WITHOUT_WORDS_MS = 6000;
+// (Was 6s; outside noise held the learner's turns open too long on ship day.)
+const SOUND_WITHOUT_WORDS_MS = 3500;
+
+// Quieter than this never counts as the elder making sound (faint outside noise).
+const SOUND_FLOOR = 0.02;
 
 // Testing switches in the address: &rate=1 sets the speaking pace, &meter=off
 // turns off the sound meter (to compare how the voice sounds without it).
@@ -202,7 +206,7 @@ function checkForSound() {
   recentLevels.push(level);
   if (recentLevels.length > 100) recentLevels.shift();
   const quietLevel = Math.min(...recentLevels);
-  const makingSound = level > Math.max(quietLevel * 3, 0.01);
+  const makingSound = level > Math.max(quietLevel * 3, SOUND_FLOOR);
   if (!makingSound) {
     // After a stretch of sound with no words and then a pause, ask again.
     const soundLasted = lastSound - soundStartedAt;

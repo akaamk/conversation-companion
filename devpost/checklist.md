@@ -120,3 +120,4 @@ Activity mode: explicit static fallback (code viewed on GitHub; the app runs onl
 - Slice 6 learner check passed: the blocked-microphone note showed, and mumbling "more or less worked" (followed up in the final review). Final automated run before the final review: 131 checks across 17 test scripts, all passing.
 
 - Ship day: the woman's voice (Jenny) is now the default and listed first in question 9, including for the demo profile — the learner found Guy still sounded robotic in conversation.
+- Ship day: sound with no new words now holds a turn open for at most 3.5s (was 6s), and very faint sound is ignored — in the learner's live test, low outside noise made the pause before answering too long, while turning the sound meter off brought back cut-offs.
