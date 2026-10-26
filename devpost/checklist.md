@@ -126,3 +126,4 @@ Activity mode: explicit static fallback (code viewed on GitHub; the app runs onl
 - Ship day: everyday pleasantries ("Good morning, how are you?") get a warm, natural answer; the companion only says it's an AI when asked — in the learner's test it answered "I'm an AI so I don't experience mornings."
 - Ship day: replies are now usually one or two short sentences (was two or three) — the learner found the replies too long while rehearsing the demo.
 - Ship day: at most one fact per reply, no strings of facts — while rehearsing, a reply listed facts about the Mets, the Dodgers and their stadiums.
+- Ship day: the companion picks up on story hints at the end of a turn and invites the story — while rehearsing, it answered the earlier parts of a long turn and skipped "I also remember Shea Stadium in another way."
