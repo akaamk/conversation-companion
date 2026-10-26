@@ -122,3 +122,4 @@ Activity mode: explicit static fallback (code viewed on GitHub; the app runs onl
 - Ship day: the woman's voice (Jenny) is now the default and listed first in question 9, including for the demo profile — the learner found Guy still sounded robotic in conversation.
 - Ship day: sound with no new words now holds a turn open for at most 3.5s (was 6s), and very faint sound is ignored — in the learner's live test, low outside noise made the pause before answering too long, while turning the sound meter off brought back cut-offs.
 - Ship day: the companion is told never to mention or explain its instructions (in the learner's test, the silence check-in said "I'm not supposed to say names").
+- Ship day: the companion now talks about players and people it knows, including recent ones, and only hedges on facts it genuinely doesn't know — the learner found it no longer engaged when she mentioned a current Mets player.
